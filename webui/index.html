@@ -8,6 +8,7 @@
 <script type="module" src="app.js"></script>
 </head>
 <body>
+<div id="view-main">
 <header class="topbar">
   <div>
     <h1>mihomo-ksu</h1>
@@ -44,6 +45,64 @@
       </button>
     </div>
   </section>
+
+  <section class="card">
+    <h2 class="card-title" data-i18n="advanced.title"></h2>
+    <div class="list">
+      <button class="list-row" id="advanced-edit">
+        <span class="list-text"><span data-i18n="advanced.editYaml"></span><span class="muted" data-i18n="advanced.editYamlHint"></span></span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+      </button>
+      <button class="list-row" id="advanced-preview">
+        <span class="list-text"><span data-i18n="advanced.preview"></span><span class="muted" data-i18n="advanced.previewHint"></span></span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+      </button>
+    </div>
+  </section>
 </main>
+
+<div class="savebar" id="savebar" hidden>
+  <span id="savebar-text"></span>
+  <button class="btn btn-on-dark" id="savebar-discard" data-i18n="savebar.discard"></button>
+  <button class="btn btn-on-dark-primary" data-action="save" data-i18n="save.save"></button>
+</div>
+</div>
+
+<div class="page" id="view-editor" hidden>
+  <header class="page-header">
+    <button class="icon-btn" data-action="back" data-i18n-label="nav.back">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>
+      </button>
+    <div><h1 data-i18n="editor.title"></h1><p class="muted" data-i18n="editor.subtitle"></p></div>
+  </header>
+  <div class="notice notice-info page-gutter">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8v.01"/></svg>
+    <span data-i18n="editor.notice"></span>
+  </div>
+  <label class="visually-hidden" for="editor-text" data-i18n="editor.label"></label>
+  <textarea class="code-editor page-gutter" id="editor-text" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea>
+  <div class="page-actions">
+    <button class="btn btn-secondary grow" id="editor-preview" data-i18n="editor.preview"></button>
+    <button class="btn btn-primary grow" data-action="save" data-i18n="save.save"></button>
+  </div>
+</div>
+
+<div class="page" id="view-preview" hidden>
+  <header class="page-header">
+    <button class="icon-btn" data-action="back" data-i18n-label="nav.back">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>
+      </button>
+    <div><h1 data-i18n="preview.title"></h1><p class="muted" data-i18n="preview.subtitle"></p></div>
+  </header>
+  <p class="notice notice-error page-gutter" id="preview-error" hidden></p>
+  <pre class="code-view page-gutter" id="preview-text"></pre>
+</div>
+
+<dialog class="dialog" id="error-dialog" aria-labelledby="error-title">
+  <h2 id="error-title"></h2>
+  <p id="error-message"></p>
+  <pre id="error-log" hidden></pre>
+  <div class="dialog-actions"><button class="btn btn-primary" id="error-close"></button></div>
+</dialog>
 </body>
 </html>

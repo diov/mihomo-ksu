@@ -1,6 +1,8 @@
 // The only place that touches the device: every call runs in KSU's root shell.
 import { exec } from './vendor/kernelsu.js';
 
+export { toast } from './vendor/kernelsu.js';
+
 export const MODDIR = '/data/adb/modules/mihomo-ksu';
 export const DATA = '/data/adb/mihomo-ksu';
 const API = 'http://127.0.0.1:9090';
@@ -24,6 +26,34 @@ async function sh(command) {
 
 export function readFile(path) {
   return sh(`cat ${quote(path)}`);
+}
+
+export function readFileIfExists(path) {
+  return sh(`[ ! -f ${quote(path)} ] || cat ${quote(path)}`);
+}
+
+// base64 keeps YAML quotes, $ and newlines away from the shell.
+export async function writeFile(path, text) {
+  let binary = '';
+  for (const byte of new TextEncoder().encode(text)) binary += String.fromCharCode(byte);
+  await sh(`echo ${btoa(binary)} | base64 -d > ${quote(path)}`);
+}
+
+export async function testConfig(path) {
+  const { errno, stdout } = await exec(`${MODDIR}/bin/mihomo -t -d ${DATA} -f ${quote(path)} 2>&1`);
+  return { ok: errno === 0, output: stdout };
+}
+
+export function removeFiles(...paths) {
+  return sh(`rm -f ${paths.map(quote).join(' ')}`);
+}
+
+// Replaces both files, then records the base.yaml they were built from and clears the description hint.
+export function commitConfig(overrideTmp, configTmp) {
+  return sh(
+    `mv ${quote(overrideTmp)} ${DATA}/override.yaml && mv ${quote(configTmp)} ${DATA}/config.yaml && ` +
+      `${MODDIR}/scripts/template.sh applied`,
+  );
 }
 
 export async function logTail(lines) {

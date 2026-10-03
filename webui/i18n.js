@@ -13,8 +13,9 @@ export function t(key, params = {}) {
   return text.replace(/\{(\w+)\}/g, (match, name) => (name in params ? String(params[name]) : match));
 }
 
-// Static markup marks its text with data-i18n="<key>".
+// Static markup marks its text with data-i18n="<key>" and icon-only labels with data-i18n-label.
 export function translatePage() {
   document.documentElement.lang = locale;
   for (const el of document.querySelectorAll('[data-i18n]')) el.textContent = t(el.dataset.i18n);
+  for (const el of document.querySelectorAll('[data-i18n-label]')) el.setAttribute('aria-label', t(el.dataset.i18nLabel));
 }

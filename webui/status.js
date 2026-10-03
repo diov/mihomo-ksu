@@ -26,7 +26,7 @@ async function renderPrivateDns() {
   }
 }
 
-async function render() {
+export async function refreshStatus() {
   const { problem, pid } = await check();
   $('status').dataset.state = problem ? 'error' : 'ok';
   $('status-title').textContent = t(problem ? `status.${problem}.title` : 'status.running');
@@ -47,7 +47,7 @@ async function restart(onRestarted) {
   button.querySelector('span').textContent = t('status.restarting');
   try {
     await ctl('restart');
-    await Promise.all([render(), onRestarted()]);
+    await Promise.all([refreshStatus(), onRestarted()]);
   } finally {
     button.disabled = false;
     button.querySelector('span').textContent = t('status.restart');
@@ -62,5 +62,5 @@ export function initStatus(onRestarted) {
   });
   $('status-open-dashboard').addEventListener('click', () => openDashboard());
   $('status-restart').addEventListener('click', () => restart(onRestarted));
-  return render();
+  return refreshStatus();
 }
