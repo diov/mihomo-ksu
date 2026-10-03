@@ -76,6 +76,8 @@ body {
   color: var(--text);
   font-family: var(--font);
   -webkit-text-size-adjust: 100%;
+  /* The WebView's tap highlight is a rectangle that ignores border-radius. */
+  -webkit-tap-highlight-color: transparent;
 }
 
 .topbar {
@@ -96,4 +98,163 @@ body {
   margin: 2px 0 0;
   color: var(--text-muted);
   font-size: 13px;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: 0 var(--space-4) var(--space-5);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.card-header .muted {
+  margin: 0;
+}
+
+.status-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.status-title h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.dot {
+  flex: none;
+  width: 12px;
+  height: 12px;
+  border-radius: var(--radius-pill);
+  background: var(--outline);
+}
+
+#status[data-state="ok"] .dot {
+  background: var(--ok);
+}
+
+#status[data-state="error"] .dot {
+  background: var(--error);
+}
+
+#status[data-state="error"] h2 {
+  color: var(--error);
+}
+
+.body-text {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text-muted);
+}
+
+.log summary {
+  min-height: var(--touch);
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary);
+  cursor: pointer;
+}
+
+/* Capped so the actions below stay on screen; the box scrolls instead. */
+.log pre {
+  max-height: calc(12 * 1.6em);
+  overflow: auto;
+  margin: 0;
+  padding: var(--space-3);
+  border-radius: var(--radius-field);
+  background: var(--code-bg);
+  color: var(--code-text);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: var(--space-3);
+  border-radius: var(--radius-field);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.notice svg {
+  flex: none;
+  margin-top: 1px;
+}
+
+.notice-warn {
+  background: var(--warn-container);
+  color: var(--on-warn-container);
+}
+
+.actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.grow {
+  flex: 1;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--touch);
+  padding: 0 var(--space-5);
+  border: 0;
+  border-radius: var(--radius-pill);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn:active:not(:disabled) {
+  background-image: linear-gradient(color-mix(in srgb, currentColor 12%, transparent), color-mix(in srgb, currentColor 12%, transparent));
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+.btn-secondary {
+  background: var(--primary-container);
+  color: var(--on-primary-container);
+}
+
+[hidden] {
+  display: none !important;
 }

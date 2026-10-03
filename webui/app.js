@@ -1,5 +1,6 @@
 import { MODDIR, readFile, api } from './device.js';
 import { t, translatePage } from './i18n.js';
+import { initStatus } from './status.js';
 
 async function renderVersions() {
   const prop = await readFile(`${MODDIR}/module.prop`);
@@ -15,3 +16,4 @@ async function renderVersions() {
 
 translatePage();
 renderVersions();
+initStatus(renderVersions);

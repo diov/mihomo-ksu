@@ -4,7 +4,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>mihomo-ksu</title>
-<link rel="icon" href="data:,">
 <link rel="stylesheet" href="style.css">
 <script type="module" src="app.js"></script>
 </head>
@@ -15,5 +14,36 @@
     <p class="muted" id="versions"></p>
   </div>
 </header>
+
+<main class="content">
+  <section class="card" id="status" aria-live="polite">
+    <div class="card-header">
+      <div class="status-title">
+        <span class="dot"></span>
+        <h2 id="status-title" data-i18n="status.checking"></h2>
+      </div>
+      <span class="muted" id="status-pid"></span>
+    </div>
+    <p class="body-text" id="status-desc" hidden></p>
+    <details class="log" id="status-log" hidden>
+      <summary data-i18n="status.logTail"></summary>
+      <pre id="status-log-text"></pre>
+    </details>
+    <div class="notice notice-warn" id="status-private-dns" hidden>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l9.5 17h-19z"/><path d="M12 10v4M12 17.5v.01"/></svg>
+      <span id="status-private-dns-text"></span>
+    </div>
+    <div class="actions">
+      <button class="btn btn-primary grow" id="status-open-dashboard">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>
+        <span data-i18n="status.openDashboard"></span>
+      </button>
+      <button class="btn btn-secondary" id="status-restart">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg>
+        <span data-i18n="status.restart"></span>
+      </button>
+    </div>
+  </section>
+</main>
 </body>
 </html>

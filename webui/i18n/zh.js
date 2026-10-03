@@ -1,4 +1,22 @@
 export default {
   'header.versions': '模块 {module} · 内核 {core}',
   'header.coreUnavailable': '不可用',
+
+  'status.checking': '正在检查…',
+  'status.running': '运行中',
+  'status.pid': 'pid {pid}',
+  'status.stopped.title': '未运行',
+  'status.stopped.desc': '内核没有在运行。点击"重启"启动它；如果仍然失败，请查看下方日志。',
+  'status.controller.title': '控制器不可用',
+  'status.controller.desc': '内核在运行，但 API（127.0.0.1:9090）无法访问，面板和保存后的热重载都不可用。常见原因是端口被其他程序占用。',
+  'status.tun.title': 'Tun 未启动',
+  'status.tun.desc': '内核在运行，但流量没有经过 mihomo。常见原因是另一个 Tun 代理模块正在运行，请在管理器中禁用它后点击"重启"。',
+  'status.logTail': '日志末尾（20 行）',
+  'status.privateDns': '私人 DNS 未关闭（当前：{mode}），可能绕过 DNS 劫持。请在系统设置的网络选项中关闭。',
+  'status.privateDnsMode.null': '自动',
+  'status.privateDnsMode.opportunistic': '自动',
+  'status.privateDnsMode.hostname': '指定服务器',
+  'status.openDashboard': '打开面板',
+  'status.restart': '重启',
+  'status.restarting': '正在重启…',
 };

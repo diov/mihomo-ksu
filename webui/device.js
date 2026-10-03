@@ -26,6 +26,32 @@ export function readFile(path) {
   return sh(`cat ${quote(path)}`);
 }
 
+export async function logTail(lines) {
+  return sh(`tail -n ${Number(lines)} ${DATA}/log/mihomo.log`);
+}
+
+// Resolves to the exit code: ctl.sh status exits 0 only while mihomo is running.
+export async function ctl(action) {
+  return (await exec(`${MODDIR}/scripts/ctl.sh ${action}`)).errno;
+}
+
+export async function corePid() {
+  return (await readFile(`${DATA}/mihomo.pid`)).trim();
+}
+
+// "off", "opportunistic", "hostname", or "null" when never set (the system then uses automatic mode).
+export async function privateDnsMode() {
+  return (await sh('settings get global private_dns_mode')).trim();
+}
+
+// The secret is filled in by the shell, so it never passes through the page.
+export function openDashboard() {
+  return sh(
+    `am start -a android.intent.action.VIEW -d ` +
+      `"http://127.0.0.1:9090/ui/#/setup?hostname=127.0.0.1&port=9090&secret=$(cat ${DATA}/secret)"`,
+  );
+}
+
 // The secret reaches curl through stdin (printf is a shell builtin), never argv.
 export async function api(method, path, body) {
   const data = body === undefined ? '' : ` -H 'Content-Type: application/json' --data-binary ${quote(JSON.stringify(body))}`;
