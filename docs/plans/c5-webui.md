@@ -2,6 +2,22 @@
 
 状态：**已批准**。
 
+## 进度
+
+| 步骤 | 状态 |
+|---|---|
+| C5.1 merge 与测试 | ✅ `333aaaf` |
+| C5.2 页面骨架、设备调用、i18n | ✅ `39d2782` |
+| C5.3 状态卡片 | ✅ `aba9ae9` |
+| C5.4 先行 template.sh | ✅ `f075ff0` |
+| C5.4 保存流程与 YAML 编辑页 | ✅ `dbbe046` |
+| C5.5 订阅编辑 | ✅ `f5f0416` |
+| C5.6 规则编辑 | ✅ `f5b3104` |
+| C5.7 模板更新横幅 | 下一步 |
+| C5.8 导入导出 | 未开始 |
+
+每个子步骤完成后更新本表（与实现在同一个分支上提交），并在 `v0.1.md` 的进度表里同步。
+
 上级计划：[`v0.1.md`](v0.1.md) C5。合并规则：[`../override.md`](../override.md)。
 
 ## 思路
@@ -96,12 +112,23 @@
 - 验证：添加一条前置规则，保存后在面板的规则列表中位于最前；后置规则位于 `MATCH` 之前；表单表达不了的规则在编辑其他规则后原样保留。
 
 ### C5.7 `feat(webui): template update banner`
-- 打开页面时比较 `base.yaml` 的 hash 与 `config.base.sha256`，不一致时显示横幅、"应用"和"查看合并结果"。"应用"就是一次不修改 override 的保存。
-- 验证：修改模块内的 `base.yaml` 后打开 WebUI 出现横幅；点击"应用"后横幅和 `description` 中的提示都消失。
+- 判断：`device.js` 加入 `templateChanged()`，执行 `scripts/template.sh changed`，退出码 0 表示 `base.yaml` 与生成 `config.yaml` 时所用的不同。页面加载时与每次保存后各检查一次。
+- 横幅：设计稿"主页 · 模板更新 + 异常"，放在主页顶部、运行状态卡片之上；标题"模板已更新"，说明文字，按钮"查看合并结果"（打开预览视图）与"应用"。
+- "应用"就是一次保存：任何保存都基于当前的 `base.yaml`，`commitConfig` 里的 `template.sh applied` 会更新 hash 并去掉 `description` 前缀。
+  - 没有未保存的改动时，"应用"直接执行保存（草稿等于已保存的 override）。
+  - 有未保存的改动时，隐藏"应用"，说明文字改为"保存未保存的改动时会一并应用新模板"，避免一个按钮同时提交了用户还没确认的改动。
+- 文案进 `i18n/zh.js`。
+- 验证（做法见 `docs/dev-testing.md`）：备份后在设备上给模块内的 `base.yaml` 末尾加一行注释，刷新 WebUI 出现横幅；"查看合并结果"打开预览；点击"应用"后横幅消失、`template.sh changed` 退出码为 1、`module.prop` 的 `description` 没有前缀；有未保存改动时"应用"隐藏。验证后恢复 `base.yaml`。
 
 ### C5.8 `feat(webui): import and export via the transfer file`
-- 读写 `/sdcard/Download/mihomo-ksu/override.yaml`；导入的内容进入未保存更改，走同一个保存流程；完成后提示删除中转文件（decisions #6）。
-- 验证：在电脑上修改导出的文件，`adb push` 回中转路径后导入并保存，改动生效。
+- 入口：主页"高级"卡片的"导入 / 导出"一行，两个按钮（设计稿"主页 · 正常"）。
+- 中转文件固定为 `/sdcard/Download/mihomo-ksu/override.yaml`（decisions #6）。
+- 导出：写入**已保存**的 override（不含未保存的改动；有未保存改动时在提示里说明），目录不存在时先创建。
+- 导入：读取中转文件替换草稿，成为未保存的改动，由用户检查后"保存并应用"，走同一个保存流程；文件不存在时弹窗说明路径。导入会覆盖当前草稿，"放弃"恢复的是已保存的版本。
+- 导入或导出完成后弹窗提示"文件中包含订阅链接，用完请删除"，提供"删除文件"与"保留"。
+- `device.js` 复用 `readFile`、`writeFile`、`removeFiles`，加入创建目录。
+- [未验证] root 写入 `/sdcard` 的文件能否被电脑（MTP / `adb pull`）读取、`adb push` 的文件 root 能否读取；实施时先在设备上确认。
+- 验证：导出后在电脑上 `adb pull` 查看内容；修改后 `adb push` 回中转路径，导入并保存，改动生效；删除按钮确实删除了中转文件。
 
 ## 已定事项
 

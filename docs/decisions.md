@@ -99,7 +99,7 @@ KernelSU / APatch 模块：开机后台运行 mihomo，以 Tun 模式做全局�
 ## 8. 项目管理
 
 - 仓库：GitHub public，名称与 module id 统一为 `mihomo-ksu`（符合 KSU 的 id 正则 `^[a-zA-Z][a-zA-Z0-9._-]+$`）。[已验证 via KernelSU `docs/guide/module.md`]
-- License：MIT。随包分发的第三方组件（mihomo MIT、metacubexd MIT、js-yaml MIT、kernelsu Apache-2.0）保留各自的许可声明。
+- License：MIT。随包分发的第三方组件保留各自的许可声明：mihomo（MIT）、metacubexd（MIT）、geo 数据 meta-rules-dat（GPL-3.0）、js-yaml（MIT）、kernelsu npm 包（Apache-2.0；KernelSU 主仓库是 GPL-3.0，但随包的是 npm 包）。[已验证 via gh repo license、npm registry，2026-10-04]
 - 二进制和第三方产物不进 git，由 `build.sh` 在构建时下载；哪些固定版本、哪些取最新版见 #10。
 - 版本号从 git tag 推导：tag `vX.Y.Z` 对应 `version=vX.Y.Z`，`versionCode = X*10000 + Y*100 + Z`（约束：Y、Z < 100）。
 - `updateJson` 指向 `https://github.com/<owner>/mihomo-ksu/releases/latest/download/update.json`，由 release workflow 生成并作为 release asset 上传，不需要向 main 分支提交。
@@ -134,3 +134,21 @@ KernelSU / APatch 模块：开机后台运行 mihomo，以 Tun 模式做全局�
   - 否决的备选：内核放在数据目录，仅在不存在时拷入。用户如果不在面板里升级，内核就一直停在首次安装时的版本，而 `base.yaml` 会随模块演进，最终 `mihomo -t` 失败；要避免这一点就得在安装时比较版本，复杂度不值得。
 - **面板和 geo 放在数据目录**，仅在不存在时拷入，自更新的结果可以跨模块升级保留（见 #6）。它们不受模板约束。
 - **内核位置不影响生命周期**：KSU 禁用或删除模块时，只是在模块目录中创建 `disable` 或 `remove` 标记，不会结束正在运行的进程。下次开机时，KSU 对禁用的模块跳过 `service.sh`；对删除的模块，在 post-fs-data 阶段执行 `uninstall.sh` 后删除模块目录。[已验证 via KernelSU `userspace/ksud/src/module.rs`、`init_event.rs`] APatch 的行为[未验证]。
+
+## 11. 规则集（rule-providers）与订阅中的规则
+
+- **背景**：base 的规则只依赖 geo 数据（GEOSITE/GEOIP），数据不准时没有第二个来源。mihomo 的 rule-provider 可以引用他人维护的规则集。
+- **做法**：
+  - override 中按订阅的方式写 `rule-providers`：每条只需 `url`、`behavior`、`format`；`type`、`interval` 由 base 的 `x-rule-provider-defaults` 在合并时补齐，`path` 按名称和格式生成为 `./rules/<name>.<ext>`（规则见 `override.md`）。
+  - 规则集由前置 / 后置规则中的 `RULE-SET,<name>,<策略>` 引用，在 WebUI 的规则编辑页选择。
+  - WebUI 提供"规则集"卡片与全屏编辑页（名称、链接、行为、格式、更新间隔）；仍被规则引用的规则集不能删除。第一版不内置预设，只支持粘贴链接。
+- 事实依据：
+  - `behavior` 为 `domain` / `ipcidr` / `classical`，`format` 为 `yaml` / `text` / `mrs`（默认 `yaml`），`mrs` 只支持 `domain` / `ipcidr`；`path` 必须在 home dir 内。[已验证 via meta-docs `config/rule-providers/index.md`]
+  - `no-resolve` 只对目标 IP 类规则有意义，`ipcidr` 规则集适用。[已验证 via meta-docs `config/rules/index.md`]
+  - 不设置 `proxy` 时，下载经过 mihomo 自身的规则分流，GitHub 上的规则集会走代理，无需额外配置。[已验证 via mihomo `component/http/http.go`：`inner.HandleTcp(inner.GetTunnel(), …)`]
+- 选择数据源时注意：MetaCubeX/meta-rules-dat 提供的 `.mrs` 与 geosite 同源，不能作为第二来源 [未验证]。
+- **订阅中的规则不使用**：mihomo 解析 proxy-provider 时只读 `proxies` 字段，订阅里的 `rules`、`proxy-groups` 等被忽略 [已验证 via mihomo `adapter/provider/provider.go` `ProxySchema`]。
+  - 否决的备选 B：保存时把订阅规则抄进配置（映射策略名）。只是保存时的快照，订阅更新后不跟随；以作者的订阅为例有 4280 条内联规则，`config.yaml` 会从约 6KB 涨到约 200KB，超过 WebUI 单条命令写文件的长度上限（约 128KB）；也违背 #2 去掉内联规则的初衷。
+  - 否决的备选 C：运行时把订阅规则按策略拆成多个 rule-set。实现复杂，mihomo 没有订阅更新后的回调可用。
+  - 订阅里的规则与 base 的 GEOSITE 分类大体重合（按分类名对比，未逐条核对）；缺少的个别规则用前置规则补。
+

@@ -18,8 +18,8 @@ override 是一个 mihomo 配置片段，只写与 base 不同的部分。
 
 按顺序执行：
 
-1. **深度合并**：除特殊键（`prepend-rules`、`append-rules`）外，override 的每个键按下面的规则合并到 base 上。`x-provider-defaults` 同样参与这一步，也就是说 override 可以修改订阅默认字段。
-2. **订阅补齐**：用第 1 步得到的 `x-provider-defaults`，补齐 `proxy-providers` 中每个条目缺失的字段。
+1. **深度合并**：除特殊键（`prepend-rules`、`append-rules`）外，override 的每个键按下面的规则合并到 base 上。`x-provider-defaults`、`x-rule-provider-defaults` 同样参与这一步，也就是说 override 可以修改这两组默认字段。
+2. **订阅与规则集补齐**：用第 1 步得到的 `x-provider-defaults` 补齐 `proxy-providers`、用 `x-rule-provider-defaults` 补齐 `rule-providers` 中每个条目缺失的字段。
 3. **规则插入**：在第 1 步得到的 `rules` 上处理 `prepend-rules` / `append-rules`，然后从结果中删除这两个键。
 
 ### 1. 深度合并
@@ -46,6 +46,18 @@ override 是一个 mihomo 配置片段，只写与 base 不同的部分。
 - `x-provider-defaults` 本身原样保留在 `config.yaml` 中，mihomo 忽略不认识的顶层键。
 
 通常每条订阅只需要写 `url`。
+
+### 2b. 规则集补齐
+
+`rule-providers` 的每个条目按第 2 步同样的方式补齐，差别只有：
+
+- 默认字段来自 `x-rule-provider-defaults`（base 中为 `type: http`、`interval: 86400`）。
+- 条目没写 `path` 时，生成 `./rules/<name>.<ext>`；`<ext>` 由条目的 `format` 决定：`yaml`（或未写）→ `yaml`，`text` → `txt`，`mrs` → `mrs`，其他值原样作为扩展名（交给 `mihomo -t` 报错）。
+- `<name>` 不能包含 `/`、`<entry>` 必须是 map，否则报错（与订阅相同）。
+- `x-rule-provider-defaults` 原样保留在 `config.yaml` 中。
+- 规则集只有在规则中以 `RULE-SET,<name>,<策略>` 引用时才生效；引用一个不存在的规则集，`mihomo -t` 会报错。
+
+状态：规范已定，实现见 `plans/c8-rule-sets.md`（v0.1 的最后一步）。
 
 ### 3. 规则插入
 

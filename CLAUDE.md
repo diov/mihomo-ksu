@@ -5,8 +5,10 @@ KernelSU / APatch 模块：开机以 Tun 模式运行 mihomo，提供模块 WebU
 ## 文档索引
 
 - `docs/decisions.md`：已确认的决策及依据。动手前先读；与代码冲突时以它为准，先确认再改。
-- `docs/plans/`：实施计划，按 commit 拆分。
+- `docs/plans/`：实施计划，按 commit 拆分。`v0.1.md` 顶部的进度表是当前进度的入口；WebUI 细节在 `c5-webui.md`，规则集在 `c8-rule-sets.md`。
 - `docs/override.md`：override 合并规则（WebUI 与 `merge.js` 的权威规范）。
+- `docs/dev-testing.md`：真机验证方法（构建安装、开发同步、WebView 调试、真实触摸、隐私要求）。动手验证前先读。
+- 设计稿（私有 Artifact）：链接见 `c5-webui.md` 已定事项。
 
 ## 技术栈
 
