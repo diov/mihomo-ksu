@@ -1,0 +1,6 @@
+id=mihomo-ksu
+name=mihomo-ksu
+version=
+versionCode=
+author=diov
+description=Run mihomo in Tun mode at boot, with a WebUI for config management.
