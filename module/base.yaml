@@ -1,0 +1,142 @@
+# Module-maintained template. Do not edit on device: put changes in
+# /data/adb/mihomo-ksu/override.yaml via the module WebUI (docs/override.md).
+# The controller secret is passed on the command line, never written here.
+
+mode: rule
+ipv6: false
+unified-delay: true
+geodata-mode: true
+geo-auto-update: true
+geo-update-interval: 24
+
+external-controller: 127.0.0.1:9090
+external-ui: ui
+
+profile:
+  store-selected: true
+  store-fake-ip: true
+
+tun:
+  enable: true
+  stack: mixed
+  # Same as mihomo's default on Android; ctl.sh's hotspot FORWARD rules use this name.
+  device: Meta
+  dns-hijack:
+    - any:53
+    - tcp://any:53
+  auto-route: true
+  auto-detect-interface: true
+  strict-route: true
+  # No route-exclude-address for LAN ranges: on Android sing-tun does not route
+  # port 53 back into the tun, so DNS to a LAN resolver (the Wi-Fi router) would
+  # bypass dns-hijack and fake-ip. LAN traffic goes DIRECT via GEOIP,private.
+
+sniffer:
+  enable: true
+  # Sniffed domains only drive rule matching; connections keep the resolved IP.
+  override-destination: false
+  sniff:
+    HTTP:
+      ports: [80, 8080-8880]
+    TLS:
+      # 5228: Google FCM / Play services
+      ports: [443, 5228, 8443]
+    QUIC:
+      ports: [443, 8443]
+  skip-domain:
+    - "+.push.apple.com"
+    - "Mijia Cloud"
+
+dns:
+  enable: true
+  ipv6: false
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.1/16
+  fake-ip-filter:
+    - "geosite:private"
+    - "geosite:connectivity-check"
+    - "*.lan"
+    - localhost.ptlogin2.qq.com
+  default-nameserver:
+    - 223.5.5.5
+    - 119.29.29.29
+  nameserver:
+    - https://dns.alidns.com/dns-query
+    - https://doh.pub/dns-query
+
+# Fields every proxy-providers entry in override.yaml inherits unless it sets
+# them itself; path is generated from the entry name (docs/override.md).
+x-provider-defaults:
+  type: http
+  interval: 21600
+  health-check:
+    enable: true
+    url: https://www.gstatic.com/generate_204
+    interval: 900
+    lazy: true
+
+x-region: &region
+  type: select
+  include-all: true
+
+x-service: &service
+  type: select
+  proxies: [Proxy, HK, JP, SG, TW, US, DIRECT]
+
+proxy-groups:
+  - name: Proxy
+    type: select
+    proxies: [Auto, HK, JP, SG, TW, US, DIRECT]
+    include-all: true
+  - name: Auto
+    type: url-test
+    include-all: true
+    url: https://www.gstatic.com/generate_204
+    interval: 300
+    lazy: true
+  - { name: HK, <<: *region, filter: "(?i)港|(?<![a-z])hk(?![a-z])|hong ?kong" }
+  - { name: JP, <<: *region, filter: "(?i)日本|(?<![a-z])jp(?![a-z])|japan" }
+  - { name: SG, <<: *region, filter: "(?i)新加坡|狮城|(?<![a-z])sg(?![a-z])|singapore" }
+  - { name: TW, <<: *region, filter: "(?i)台湾|臺灣|(?<![a-z])tw(?![a-z])|taiwan" }
+  - { name: US, <<: *region, filter: "(?i)美国|美國|(?<![a-z])us(?![a-z])|united states" }
+  - { name: YouTube, <<: *service }
+  - { name: Netflix, <<: *service }
+  - { name: Disney, <<: *service }
+  - { name: HBO, <<: *service }
+  - { name: Bahamut, <<: *service, proxies: [Proxy, HK, TW] }
+  - { name: Bilibili, <<: *service, proxies: [DIRECT, HK, TW] }
+  - { name: Spotify, <<: *service }
+  - { name: Steam, <<: *service }
+  - { name: Telegram, <<: *service }
+  - { name: Google, <<: *service }
+  - { name: Microsoft, <<: *service }
+  - { name: OpenAI, <<: *service }
+  - { name: PayPal, <<: *service }
+  - { name: Apple, <<: *service }
+  - { name: Final, type: select, proxies: [Proxy, DIRECT] }
+
+rules:
+  - GEOSITE,private,DIRECT
+  - GEOIP,private,DIRECT,no-resolve
+  - GEOSITE,googlefcm,DIRECT
+  - GEOSITE,youtube,YouTube
+  - GEOSITE,netflix,Netflix
+  - GEOIP,netflix,Netflix,no-resolve
+  - GEOSITE,disney,Disney
+  - GEOSITE,hbo,HBO
+  - GEOSITE,bahamut,Bahamut
+  - GEOSITE,bilibili,Bilibili
+  - GEOSITE,spotify,Spotify
+  - GEOSITE,steam,Steam
+  - GEOSITE,telegram,Telegram
+  - GEOIP,telegram,Telegram,no-resolve
+  - GEOSITE,google,Google
+  - GEOIP,google,Google,no-resolve
+  - GEOSITE,microsoft,Microsoft
+  - GEOSITE,openai,OpenAI
+  - GEOSITE,paypal,PayPal
+  - GEOSITE,apple,Apple
+  - GEOSITE,geolocation-!cn,Proxy
+  - GEOSITE,cn,DIRECT
+  - GEOIP,cn,DIRECT
+  - MATCH,Final
