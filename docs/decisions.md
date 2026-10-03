@@ -26,7 +26,9 @@ KernelSU / APatch 模块：开机后台运行 mihomo，以 Tun 模式做全局�
   - `external-controller: 0.0.0.0:9090` 不设 secret，在公共 Wi-Fi 上等于把 API 暴露给同网段的所有设备。
   - 内联几千条规则是配置无法手工编辑的根本原因。
   - 不能 `chmod 777 -R $MODPATH`：KSU 会自动为 `webroot` 设置权限和 SELinux context，模块自行修改会破坏它。[已验证 via KernelSU `docs/guide/module-webui.md`]
-- **迁移约束**：如果设备上还装着旧模块（`/data/adb/modules/Clash`），两个 Tun 会冲突。安装脚本检测到旧模块目录存在、且其中没有 `remove` 文件时，中止安装并提示用户先卸载旧模块；已在 Manager 中标记卸载（存在 `remove`）的情况放行，避免用户多重启一次。
+- **与其他 Tun 模块的冲突**：冲突与 module id 无关，而是运行时争用同一批资源（网卡名 `Meta`、策略路由优先级与表 2022、53 端口劫持、控制端口）。安装时不做检测：写死某个旧模块的路径没有意义，安装时刻的进程状态也不代表下次开机的状态。
+  - mihomo 在资源冲突时不会退出：控制端口被占只记 error 继续运行 [已验证 via adb 实测 `bind: address already in use`]；Tun 创建失败时把 `tun.enable` 置为 false 后继续运行，`GET /configs` 返回的 `tun.enable` 随之为 false [已验证 via mihomo `listener/listener.go` `ReCreateTun()`/`GetTunConf()`]。
+  - 因此由 WebUI 根据状态提示：进程是否在运行、控制器能否访问、`tun.enable` 是否为 true，异常时附上日志。不依赖日志措辞，内核自更新后仍然有效。
 
 ## 3. 内核：官方 MetaCubeX/mihomo
 
@@ -44,7 +46,7 @@ KernelSU / APatch 模块：开机后台运行 mihomo，以 Tun 模式做全局�
   - `x-provider-defaults` 会原样保留在最终的 `config.yaml` 中；mihomo 会忽略不认识的顶层键。
 - **模板变更的处理**：合并只在 WebUI 中进行，开机脚本不做合并。否决了"打包 yq、让 shell 在开机时合并"的方案，因为要多打包一个约 12MB 的二进制，复杂度不值得。具体做法：
   - 每次生成 `config.yaml` 时，同时记录所用 `base.yaml` 的 sha256。
-  - 开机时比较模块内 `base.yaml` 的 hash 与记录值。如果不一致，仍用旧的 `config.yaml` 启动，并在 `module.prop` 的 `description` 中提示"模板已更新，请打开 WebUI 应用"；WebUI 打开时同样显示提示，并提供"应用"按钮。
+  - 开机时比较模块内 `base.yaml` 的 hash 与记录值。如果不一致，仍用旧的 `config.yaml` 启动，并在 `module.prop` 的 `description` 前加上"模板已更新，请打开 WebUI 应用"的提示前缀；WebUI 打开时同样显示提示，并提供"应用"按钮，应用后去掉前缀。模块升级会换上新的 `module.prop`，前缀不会残留到下个版本。
   - 例外：如果 `override.yaml` 不存在，合并结果就等于 `base.yaml`，开机脚本直接拷贝即可，不需要提示。
   - 已知代价：在用户打开 WebUI 应用之前，模板里的修复（包括安全修复）不会生效。
 - 合并在 WebUI 中用 JS 完成，依赖 **js-yaml**（MIT，截至 2026-10-02 最新为 5.4.2）。[已验证 via npm registry]
@@ -88,9 +90,10 @@ KernelSU / APatch 模块：开机后台运行 mihomo，以 Tun 模式做全局�
 ## 7. 安全默认值
 
 - `external-controller: 127.0.0.1:9090`，并在安装时生成随机 `secret`。理由是本机任何 App 都能访问 localhost，不设 secret 就能读到订阅。
-- secret 只保存在数据目录的 `secret` 文件中，不写入任何 YAML。启动时通过命令行参数 `mihomo -secret "$(cat secret)"` 传入。[已验证 via mihomo `main.go` 的 `-secret` flag、`hub/hub.go` `WithSecret`]
-  - 原因：`base.yaml` 在仓库里，不能带 secret；而首装和"没有 override 时直接拷贝 base"这两条路径都不经过 WebUI，无法注入。
-  - 热重载不会丢失 secret：`PUT /configs` 只调用 `executor.ApplyConfig`，不重建 controller。[已验证 via mihomo `hub/route/configs.go`] 因此 override 中的 `external-controller` / `secret` 不会在热重载时生效，只能通过重启生效。
+- secret 只保存在数据目录的 `secret` 文件中，不写入任何 YAML。启动时通过环境变量 `CLASH_OVERRIDE_SECRET` 传入，效果等同 `-secret`。[已验证 via mihomo `main.go`、`hub/hub.go` `WithSecret`]
+  - 不写进 YAML 的原因不是保密（文件和 `config.yaml` 都只有 root 可读，暴露面相同），而是写入路径：`base.yaml` 在仓库里不能带 secret，写 `config.yaml` 的三处（首装、开机直接拷贝 base、WebUI 合并）都得负责注入。单独的文件是唯一来源。
+  - 不用命令行参数：`/proc` 以 `hidepid=invisible,gid=3009` 挂载，readproc 组（含 adb shell）能通过 `ps` 看到命令行；而 `/proc/<pid>/environ` 为 0400，shell 读取被拒绝。[已验证 via adb]
+  - 热重载不会丢失 secret：`PUT /configs` 只调用 `executor.ApplyConfig`，不重建 controller。[已验证 via mihomo `hub/route/configs.go`] 因此 override 中的 `external-controller` 不会在热重载时生效，只能通过重启生效；override 中的 `secret` 始终被环境变量覆盖，不生效。
 - WebUI 以 root 读取 `secret` 文件，用于调用 REST API。WebUI 中打开面板的链接带上 `#/setup?hostname=127.0.0.1&port=9090&secret=<secret>`，用户无需手动输入。[已验证 via metacubexd `packages/ui/nuxt.config.ts` `hashMode`、`packages/ui/composables/useConnect.ts` `autoLogin()`]
 
 ## 8. 项目管理
@@ -125,7 +128,7 @@ KernelSU / APatch 模块：开机后台运行 mihomo，以 Tun 模式做全局�
   - 代价：同一个 tag 构建两次，产物可能不同。release 由 CI 在打 tag 时构建一次，已发布的产物不会再变。
 - **js-yaml、kernelsu**：属于 WebUI 代码依赖，不会自更新。版本和 sha256 固定在 `versions.env`，校验失败就中止构建。
 - **内核放在模块目录 `bin/mihomo`**：
-  - `/upgrade` 会原地替换 `os.Executable()` 所在目录的二进制，过程中临时创建 `meta-update/`、`meta-backup/`，然后用 `syscall.Exec` 带原参数重启。pid、`-d`、`-secret` 都不变。[已验证 via mihomo `component/updater/update_core.go`、`hub/route/restart.go`]
+  - `/upgrade` 会原地替换 `os.Executable()` 所在目录的二进制，过程中临时创建 `meta-update/`、`meta-backup/`，然后用 `syscall.Exec` 带原参数和环境变量重启。pid、`-d`、`CLASH_OVERRIDE_SECRET` 都不变。[已验证 via mihomo `component/updater/update_core.go`、`hub/route/restart.go`]
   - 这是模块目录中第二个允许在运行时写入的地方（第一个是 #4 的 `description` 提示）。
   - 升级模块时，内核会回到构建时的版本。这样可以保证内核不比同一个 zip 里的 `base.yaml` 旧。
   - 否决的备选：内核放在数据目录，仅在不存在时拷入。用户如果不在面板里升级，内核就一直停在首次安装时的版本，而 `base.yaml` 会随模块演进，最终 `mihomo -t` 失败；要避免这一点就得在安装时比较版本，复杂度不值得。
