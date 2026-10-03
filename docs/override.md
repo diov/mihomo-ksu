@@ -40,6 +40,7 @@ override 是一个 mihomo 配置片段，只写与 base 不同的部分。
 - 结果 = `x-provider-defaults` 与 `<entry>` 深度合并（规则同第 1 步），`<entry>` 中已写的字段优先。例如条目只写了 `health-check: {url: ...}`，`health-check` 的其他字段仍从默认值补齐。
 - 条目没写 `path` 时，生成 `./providers/<name>.yaml`。
 - `<name>` 会用于文件路径，不能包含 `/`，否则报错。
+- `<entry>` 必须是 map（例如只写了名称、没有写任何字段时为 `null`），否则报错。
 - `x-provider-defaults` 本身原样保留在 `config.yaml` 中，mihomo 忽略不认识的顶层键。
 
 通常每条订阅只需要写 `url`。
