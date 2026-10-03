@@ -21,6 +21,8 @@ KernelSU / APatch 模块：开机后台运行 mihomo，以 Tun 模式做全局�
 - 否决的备选：基于 [box_for_magisk](https://github.com/taamarin/box_for_magisk)（GPL-3.0）。它同时支持 5 个内核，围绕 TPROXY iptables 构建；它的 `net.inotify` 只维护防回环规则，`webroot` 也没有调用 `ksu.exec`。两个目标问题它都没有解决。[已验证 via gh]
 - 从旧方案中保留的经验教训：
   - `tun.route-exclude-address-set` 的参数是 **rule-set 名称**，而且需要同时开启 `auto-redirect`；直接填 CIDR 是错误用法，CIDR 应该写在 `route-exclude-address` 里。[已验证 via meta-docs `config/inbound/tun.md`]
+    - 旧配置因此实际没有排除任何网段：设备上 mihomo 的路由表 2022 只有 `default dev Meta`，fake-ip 正常工作。[已验证 via adb `ip route show table 2022`、`ping` 解析到 198.18.x.x]
+    - base 也不排除局域网网段。sing-tun 在普通 Linux 上会加一条规则把 53 端口拉回 Tun，但在 Android 上跳过了 [已验证 via metacubex/sing-tun v0.4.27 `tun_linux.go`]；排除后发往局域网 DNS（Wi-Fi 路由器）的查询会绕过 `dns-hijack`，fake-ip 失效（推断，C3 真机验证）。局域网流量经 `GEOIP,private,DIRECT` 直连。
   - `external-controller: 0.0.0.0:9090` 不设 secret，在公共 Wi-Fi 上等于把 API 暴露给同网段的所有设备。
   - 内联几千条规则是配置无法手工编辑的根本原因。
   - 不能 `chmod 777 -R $MODPATH`：KSU 会自动为 `webroot` 设置权限和 SELinux context，模块自行修改会破坏它。[已验证 via KernelSU `docs/guide/module-webui.md`]
