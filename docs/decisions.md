@@ -93,7 +93,7 @@ KernelSU / APatch 模块：开机后台运行 mihomo，以 Tun 模式做全局�
 - secret 只保存在数据目录的 `secret` 文件中，不写入任何 YAML。启动时通过环境变量 `CLASH_OVERRIDE_SECRET` 传入，效果等同 `-secret`。[已验证 via mihomo `main.go`、`hub/hub.go` `WithSecret`]
   - 不写进 YAML 的原因不是保密（文件和 `config.yaml` 都只有 root 可读，暴露面相同），而是写入路径：`base.yaml` 在仓库里不能带 secret，写 `config.yaml` 的三处（首装、开机直接拷贝 base、WebUI 合并）都得负责注入。单独的文件是唯一来源。
   - 不用命令行参数：`/proc` 以 `hidepid=invisible,gid=3009` 挂载，readproc 组（含 adb shell）能通过 `ps` 看到命令行；而 `/proc/<pid>/environ` 为 0400，shell 读取被拒绝。[已验证 via adb]
-  - 热重载不会丢失 secret：`PUT /configs` 只调用 `executor.ApplyConfig`，不重建 controller。[已验证 via mihomo `hub/route/configs.go`] 因此 override 中的 `external-controller` 不会在热重载时生效，只能通过重启生效；override 中的 `secret` 始终被环境变量覆盖，不生效。
+  - 热重载不会丢失 secret：`PUT /configs` 只调用 `executor.ApplyConfig`，不重建 controller。[已验证 via mihomo `hub/route/configs.go`] override 中的 `external-controller` 和 `secret` 由合并步骤直接拒绝（见 `override.md`"模块管理的字段"）。
 - WebUI 以 root 读取 `secret` 文件，用于调用 REST API。WebUI 中打开面板的链接带上 `#/setup?hostname=127.0.0.1&port=9090&secret=<secret>`，用户无需手动输入。[已验证 via metacubexd `packages/ui/nuxt.config.ts` `hashMode`、`packages/ui/composables/useConnect.ts` `autoLogin()`]
 
 ## 8. 项目管理
