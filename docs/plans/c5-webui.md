@@ -55,13 +55,22 @@
 - "打开面板"（系统浏览器，见已定事项 1）与"重启"（`ctl.sh restart`）；`device.js` 加入执行 `ctl.sh`。
 - 验证：正常时显示"运行中"；`ctl.sh stop` 后显示未运行和日志；点击"打开面板"无需输入 secret 即进入面板；"重启"后 pid 变化。
 
+### C5.4 先行：`refactor(module): template change handling in template.sh`
+- 新增 `scripts/template.sh changed | mark | applied`：`changed` 比较 `base.yaml` 与 `config.base.sha256`；`mark` 给 `description` 加提示前缀（已有则不重复）；`applied` 写入当前 `base.yaml` 的 hash 并去掉前缀。提示文字只在这里定义一次，`service.sh` 与 WebUI 都调用它。
+- `service.sh` 改为调用 `template.sh`，行为不变。
+- 验证：在设备沙盒中重跑 C3 的三种模板情形；`applied` 去掉前缀且写入 hash。
+
 ### C5.4 `feat(webui): save flow and YAML editor`
-- 保存的完整链路：未保存更改的计数、底部浮动条（放弃 / 保存并应用）、被改动的条目标"未保存"、保存流程（见关键做法）、保存失败弹窗（合并错误和 `mihomo -t` 输出）。
-- 设计稿"YAML 编辑"页：原样编辑 `override.yaml`，保存时保留注释；"预览合并结果"只读显示生成的 `config.yaml`。
-- 先接入 YAML 编辑页，是因为它覆盖 override 的全部内容，可以独立验证保存链路。
+- **草稿模型**：页面持有已保存的 override 文本与草稿文本；YAML 编辑页直接改草稿文本，之后的表单（C5.5、C5.6）解析草稿 → 修改 → 重新输出。两者不同即有未保存的改动；"放弃"把草稿恢复为已保存的文本。
+- **改动计数**（`changes.js`，纯函数，`node --test` 覆盖）：每个增删改的订阅计 1；前置、后置规则按增加与删除的条数计（只调整顺序计 1）；其余每个值不同的顶层键计 1。草稿无法解析时不显示数字，只显示"有未保存的改动"。
+- **底部浮动条**：主页上有未保存的改动时出现，显示计数、"放弃"、"保存并应用"。条目上的"未保存"标签随 C5.5、C5.6 的条目一起实现。
+- **保存流程**（见关键做法）：成功后弹出系统 toast，并刷新运行状态卡片；第 4 步改为调用 `template.sh applied`。失败分四类，都用同一个弹窗（原生 `<dialog>`）：YAML 解析错误（附行号）、合并错误（按 `MergeError.code` 翻译）、`mihomo -t` 未通过（附输出）——这三类配置未改动；热重载失败——配置已保存，提示点击"重启"使其生效。
+- **YAML 编辑页**（设计稿）：原样编辑草稿文本，保存时原样写入 `override.yaml`，保留注释；进入时 `history.pushState`，系统返回键回到主页（KernelSU Next 在 `canGoBack()` 时执行 `goBack()` [已验证 via `WebUIActivity.kt`]）。
+- **预览合并结果**：只读显示由草稿生成的 `config.yaml`；合并失败时显示错误。主页"高级"卡片提供"编辑 override YAML"和"预览合并结果"两个入口。
 - `yaml.js`：解析与输出 YAML 的唯一入口。解析统一使用 `load(text, { schema: CORE_SCHEMA.withTags(mergeTag) })`：js-yaml 5 的默认 schema 不带合并键 [已验证 via js-yaml 5.4.2 `dist/js-yaml.d.ts`]，不开启时 `base.yaml` 的 `<<: *region` 会被当成普通键，生成的代理组缺少 `type`，`mihomo -t` 失败 [已验证 via 本地端到端合并]。
-- `device.js` 加入写文件（base64）。
-- 验证：在 YAML 页添加一条订阅，保存后面板中能看到节点；写错 YAML、写入模块管理的字段、写入错误规则类型时都被拦截，`config.yaml` 不变。
+- 输出使用 `dump(obj, { noRefs: true, lineWidth: -1 })`：不生成锚点（合并结果中多个订阅共享同一份默认字段对象），不折行长字符串（订阅 URL）。
+- `device.js` 加入写文件（base64）、`mihomo -t` 校验、执行 `template.sh`、系统 toast。
+- 验证：在 YAML 页添加一条订阅，保存后面板中能看到节点；写错 YAML、写入模块管理的字段、写入错误规则类型时都被拦截，`config.yaml` 不变；内核停止时保存，提示热重载失败且配置已写入。
 
 ### C5.5 `feat(webui): subscription editor`
 - 设计稿"订阅"卡片与"订阅编辑"底部面板：名称、链接、更新间隔（模板默认 / 1 / 12 / 24 小时）；增删改。
