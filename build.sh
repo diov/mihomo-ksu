@@ -68,8 +68,13 @@ fetch https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geoip
 fetch https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geosite.dat "$CACHE/latest/GeoSite.dat"
 
 rm -rf "$STAGE"
-mkdir -p "$STAGE/bin" "$STAGE/assets"
+mkdir -p "$STAGE/bin" "$STAGE/assets" "$STAGE/webroot/vendor"
 cp -R module/. "$STAGE/"
+cp -R webui/. "$STAGE/webroot/"
+# .js rather than .mjs so the WebView serves them with a JavaScript MIME type.
+tar -xzf "$CACHE/js-yaml-$JS_YAML_VERSION.tgz" -O package/dist/browser/js-yaml.esm.min.mjs \
+  >"$STAGE/webroot/vendor/js-yaml.js"
+tar -xzf "$CACHE/kernelsu-$KERNELSU_VERSION.tgz" -O package/index.js >"$STAGE/webroot/vendor/kernelsu.js"
 sed -e "s/^version=.*/version=$version/" -e "s/^versionCode=.*/versionCode=$version_code/" \
   module/module.prop >"$STAGE/module.prop"
 gunzip -c "$CACHE/latest/mihomo.gz" >"$STAGE/bin/mihomo"

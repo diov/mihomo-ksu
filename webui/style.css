@@ -1,0 +1,99 @@
+/* Semantic tokens from the design; dark mode redefines the same set. */
+:root {
+  color-scheme: light dark;
+
+  --bg: #f3f6f5;
+  --surface: #ffffff;
+  --text: #191c1c;
+  --text-muted: #5b6464;
+  --divider: #e4eaea;
+  --outline: #c3cccb;
+  --field: #f3f6f5;
+
+  --primary: #0b5f63;
+  --on-primary: #ffffff;
+  --primary-container: #d6ecec;
+  --on-primary-container: #0b3d40;
+
+  --ok: #1d7a5a;
+  --warn-container: #fdf0dc;
+  --on-warn-container: #5c3300;
+  --error: #b3261e;
+  --error-container: #fbe1df;
+  --on-error-container: #7a1a14;
+  --info-container: #d4e6fb;
+  --on-info-container: #0d2f52;
+
+  --code-bg: #1c2121;
+  --code-text: #d9e5e3;
+
+  --radius-card: 16px;
+  --radius-field: 12px;
+  --radius-pill: 999px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --touch: 44px;
+
+  --font: system-ui, "PingFang SC", "Noto Sans CJK SC", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f1414;
+    --surface: #1a2020;
+    --text: #dee4e3;
+    --text-muted: #a3adac;
+    --divider: #2a3232;
+    --outline: #3f4949;
+    --field: #121818;
+
+    --primary: #80d4d0;
+    --on-primary: #003735;
+    --primary-container: #0b4f52;
+    --on-primary-container: #b4ecea;
+
+    --ok: #6fd3a8;
+    --warn-container: #4a2f00;
+    --on-warn-container: #ffdcae;
+    --error: #ffb4ab;
+    --error-container: #690005;
+    --on-error-container: #ffdad6;
+    --info-container: #0f3558;
+    --on-info-container: #d4e6fb;
+
+    --code-bg: #0b0f0f;
+    --code-text: #d9e5e3;
+  }
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  -webkit-text-size-adjust: 100%;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-5) var(--space-4) var(--space-3);
+}
+
+.topbar h1 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.muted {
+  margin: 2px 0 0;
+  color: var(--text-muted);
+  font-size: 13px;
+}
