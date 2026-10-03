@@ -8,7 +8,6 @@
   --text-muted: #5b6464;
   --divider: #e4eaea;
   --outline: #c3cccb;
-  --field: #f3f6f5;
 
   --primary: #0b5f63;
   --on-primary: #ffffff;
@@ -56,7 +55,6 @@
     --text-muted: #a3adac;
     --divider: #2a3232;
     --outline: #3f4949;
-    --field: #121818;
 
     --primary: #80d4d0;
     --on-primary: #003735;
@@ -383,7 +381,7 @@ body.has-savebar .content {
   display: flex;
   align-items: center;
   gap: var(--space-1);
-  padding: var(--space-3) var(--space-2) var(--space-2);
+  padding: var(--space-3) var(--space-3) var(--space-2) var(--space-2);
 }
 
 .page-header h1 {
@@ -497,4 +495,109 @@ body.has-savebar .content {
 .dialog-actions {
   display: flex;
   justify-content: flex-end;
+}
+
+/* The label lines up with the card content; the 44px touch target stays. */
+.btn-text {
+  align-self: flex-start;
+  margin: calc(-1 * var(--space-2)) 0 calc(-1 * var(--space-2)) calc(-1 * var(--space-2));
+  padding: 0 var(--space-2);
+  background: none;
+  color: var(--primary);
+}
+
+.btn-danger-text {
+  padding: 0 var(--space-3);
+  background: none;
+  color: var(--error);
+}
+
+.row-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.row-name {
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tag {
+  flex: none;
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--warn-container);
+  color: var(--on-warn-container);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.page-body {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: var(--space-2) var(--space-4) var(--space-5);
+}
+
+.page-body .btn-danger-text {
+  align-self: flex-start;
+  margin-left: calc(-1 * var(--space-2));
+  padding: 0 var(--space-2);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.input {
+  width: 100%;
+  min-height: var(--touch);
+  box-sizing: border-box;
+  padding: var(--space-3);
+  border: 1px solid var(--outline);
+  border-radius: var(--radius-field);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 15px;
+}
+
+.input[aria-invalid="true"] {
+  border-color: var(--error);
+}
+
+.input-mono {
+  resize: none;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.hint {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.field-error {
+  font-size: 12px;
+  color: var(--error);
 }

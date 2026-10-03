@@ -1,25 +1,11 @@
-// Views (main / YAML editor / preview), the unsaved-changes bar and the save error dialog.
+// The YAML editor and preview views, the unsaved-changes bar and the save error dialog.
 import { toast } from './device.js';
 import { SaveError, buildConfig, changeCount, discardDraft, getDraft, isDirty, onDraftChange, saveDraft, setDraft } from './draft.js';
 import { t } from './i18n.js';
+import { defineView, initViews, openView } from './views.js';
 
 const $ = (id) => document.getElementById(id);
-const VIEWS = ['main', 'editor', 'preview'];
 let onSaved = () => {};
-
-function show(view) {
-  for (const name of VIEWS) $(`view-${name}`).hidden = name !== view;
-  if (view === 'editor') $('editor-text').value = getDraft();
-  if (view === 'preview') renderPreview();
-  renderSaveBar();
-  scrollTo(0, 0);
-}
-
-// Pushed so the system back button (WebView goBack) returns to the previous view.
-function open(view) {
-  history.pushState({ view }, '');
-  show(view);
-}
 
 // mihomo -t logs every step; keep the failing lines when there are any.
 function validateOutput(output) {
@@ -96,12 +82,14 @@ async function save() {
 // onSavedCallback refreshes what depends on the running config, such as the status card.
 export function initEditor(onSavedCallback) {
   onSaved = onSavedCallback;
-  history.replaceState({ view: 'main' }, '');
-  addEventListener('popstate', (e) => show(e.state?.view ?? 'main'));
-  $('advanced-edit').addEventListener('click', () => open('editor'));
-  $('advanced-preview').addEventListener('click', () => open('preview'));
-  $('editor-preview').addEventListener('click', () => open('preview'));
-  for (const b of document.querySelectorAll('[data-action="back"]')) b.addEventListener('click', () => history.back());
+  initViews(renderSaveBar);
+  defineView('editor', () => {
+    $('editor-text').value = getDraft();
+  });
+  defineView('preview', renderPreview);
+  $('advanced-edit').addEventListener('click', () => openView('editor'));
+  $('advanced-preview').addEventListener('click', () => openView('preview'));
+  $('editor-preview').addEventListener('click', () => openView('preview'));
   for (const b of document.querySelectorAll('[data-action="save"]')) b.addEventListener('click', save);
   $('savebar-discard').addEventListener('click', discardDraft);
   $('editor-text').addEventListener('input', (e) => setDraft(e.target.value));

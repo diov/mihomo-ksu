@@ -3,6 +3,7 @@ import { t, translatePage } from './i18n.js';
 import { initStatus, refreshStatus } from './status.js';
 import { loadDraft } from './draft.js';
 import { initEditor } from './editor.js';
+import { initSubscriptions } from './subscriptions-card.js';
 
 async function renderVersions() {
   const prop = await readFile(`${MODDIR}/module.prop`);
@@ -20,4 +21,5 @@ translatePage();
 renderVersions();
 initStatus(renderVersions);
 initEditor(() => Promise.all([refreshStatus(), renderVersions()]));
+initSubscriptions();
 loadDraft();

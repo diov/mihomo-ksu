@@ -2,7 +2,7 @@
 
 const isMap = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 
-function deepEqual(a, b) {
+export function deepEqual(a, b) {
   if (a === b) return true;
   if (Array.isArray(a) && Array.isArray(b)) {
     return a.length === b.length && a.every((v, i) => deepEqual(v, b[i]));

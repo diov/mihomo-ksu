@@ -1,6 +1,6 @@
 // The override being edited: the saved text on disk and the unsaved draft, plus the save flow.
 import { DATA, MODDIR, api, commitConfig, readFile, readFileIfExists, removeFiles, testConfig, writeFile } from './device.js';
-import { countChanges } from './changes.js';
+import { countChanges, deepEqual } from './changes.js';
 import { MergeError, merge } from './merge.js';
 import { YAMLException, parse, stringify } from './yaml.js';
 
@@ -20,6 +20,7 @@ export class SaveError extends Error {
 
 let saved = '';
 let draft = '';
+let base = null;
 const listeners = new Set();
 const notify = () => listeners.forEach((fn) => fn());
 
@@ -34,6 +35,27 @@ export const onDraftChange = (fn) => listeners.add(fn);
 
 export function setDraft(text) {
   draft = text;
+  notify();
+}
+
+// base.yaml only changes with a module upgrade, which needs a reboot, so parse it once.
+export async function getBase() {
+  base ??= parse(await readFile(`${MODDIR}/base.yaml`));
+  return base;
+}
+
+// The parsed saved override and draft; throws when the draft does not parse.
+export const parsedSaved = () => parse(saved);
+export const parsedDraft = () => parse(draft);
+
+// Applies a form edit: parse the draft, let fn return the new override, print it back.
+// Comments in the draft are lost (docs/plans/c5-webui.md, 关键做法), except that an edit
+// landing back on the saved content restores the saved text, so nothing shows as unsaved.
+export function updateDraft(fn) {
+  const next = fn(parse(draft));
+  const empty = !next || Object.keys(next).length === 0;
+  if (deepEqual(empty ? null : next, parse(saved))) draft = saved;
+  else draft = empty ? '' : stringify(next);
   notify();
 }
 
@@ -65,9 +87,8 @@ function parseOverride(text) {
 // The config.yaml text the draft would produce.
 export async function buildConfig(text = draft) {
   const override = parseOverride(text);
-  const base = parse(await readFile(`${MODDIR}/base.yaml`));
   try {
-    return CONFIG_HEADER + stringify(merge(base, override));
+    return CONFIG_HEADER + stringify(merge(await getBase(), override));
   } catch (err) {
     if (err instanceof MergeError) throw new SaveError('merge', { code: err.code, params: err.params });
     throw err;

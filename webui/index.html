@@ -46,6 +46,20 @@
     </div>
   </section>
 
+  <section class="card" aria-labelledby="subs-title">
+    <div class="card-header">
+      <h2 class="card-title" id="subs-title" data-i18n="subs.title"></h2>
+      <span class="muted" id="subs-count"></span>
+    </div>
+    <p class="notice notice-warn" id="subs-unavailable" data-i18n="subs.unavailable" hidden></p>
+    <p class="body-text" id="subs-empty" data-i18n="subs.empty" hidden></p>
+    <div class="list" id="subs-list"></div>
+    <button class="btn btn-text" id="subs-add">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+      <span data-i18n="subs.add"></span>
+    </button>
+  </section>
+
   <section class="card">
     <h2 class="card-title" data-i18n="advanced.title"></h2>
     <div class="list">
@@ -97,6 +111,39 @@
   <p class="notice notice-error page-gutter" id="preview-error" hidden></p>
   <pre class="code-view page-gutter" id="preview-text"></pre>
 </div>
+
+<template id="icon-edit"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M14 6l4 4"/></svg></template>
+
+<div class="page" id="view-subscription" hidden>
+  <header class="page-header">
+    <button class="icon-btn" data-action="back" data-i18n-label="subEdit.cancel">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+    <h1 class="grow" id="sub-title"></h1>
+    <button class="btn btn-primary" id="sub-done" data-i18n="subEdit.done"></button>
+  </header>
+  <div class="page-body">
+    <div class="field">
+      <label for="sub-name" data-i18n="subEdit.name"></label>
+      <input class="input" id="sub-name" autocomplete="off" autocapitalize="off" aria-describedby="sub-name-hint sub-name-error">
+      <span class="hint" id="sub-name-hint" data-i18n="subEdit.nameHint"></span>
+      <span class="field-error" id="sub-name-error" hidden></span>
+    </div>
+    <div class="field">
+      <label for="sub-url" data-i18n="subEdit.url"></label>
+      <textarea class="input input-mono" id="sub-url" rows="3" spellcheck="false" autocapitalize="off" aria-describedby="sub-url-hint sub-url-error"></textarea>
+      <span class="hint" id="sub-url-hint" data-i18n="subEdit.urlHint"></span>
+      <span class="field-error" id="sub-url-error" hidden></span>
+    </div>
+    <div class="field">
+      <label for="sub-interval" data-i18n="subEdit.interval"></label>
+      <select class="input" id="sub-interval" aria-describedby="sub-interval-hint"></select>
+      <span class="hint" id="sub-interval-hint" data-i18n="subEdit.intervalHint"></span>
+    </div>
+    <button class="btn btn-danger-text" id="sub-delete" data-i18n="subEdit.delete"></button>
+  </div>
+</div>
+
 
 <dialog class="dialog" id="error-dialog" aria-labelledby="error-title">
   <h2 id="error-title"></h2>
