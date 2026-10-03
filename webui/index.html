@@ -60,6 +60,26 @@
     </button>
   </section>
 
+  <section class="card" aria-labelledby="rules-title">
+    <div class="card-header">
+      <h2 class="card-title" id="rules-title" data-i18n="rules.title"></h2>
+      <span class="muted" data-i18n="rules.subtitle"></span>
+    </div>
+    <p class="notice notice-warn" id="rules-unavailable" data-i18n="rules.unavailable" hidden></p>
+    <div id="rules-body">
+      <p class="group-label" data-i18n="rules.prepend"></p>
+      <div class="list" id="rules-prepend"></div>
+      <p class="body-text" id="rules-prepend-empty" data-i18n="rules.none" hidden></p>
+      <p class="group-label" data-i18n="rules.append"></p>
+      <div class="list" id="rules-append"></div>
+      <p class="body-text" id="rules-append-empty" data-i18n="rules.none" hidden></p>
+    </div>
+    <button class="btn btn-text" id="rules-add">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+      <span data-i18n="rules.add"></span>
+    </button>
+  </section>
+
   <section class="card">
     <h2 class="card-title" data-i18n="advanced.title"></h2>
     <div class="list">
@@ -144,6 +164,49 @@
   </div>
 </div>
 
+
+<template id="icon-chevron"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></template>
+
+<div class="page" id="view-rule" hidden>
+  <header class="page-header">
+    <button class="icon-btn" data-action="back" data-i18n-label="subEdit.cancel">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+    <h1 class="grow" id="rule-title"></h1>
+    <button class="btn btn-primary" id="rule-done" data-i18n="rules.done"></button>
+  </header>
+  <div class="page-body">
+    <div class="segmented" id="rule-position" role="radiogroup" data-i18n-label="rules.position">
+      <button role="radio" data-position="prepend" data-i18n="rules.positionPrepend"></button>
+      <button role="radio" data-position="append" data-i18n="rules.positionAppend"></button>
+    </div>
+    <div class="group">
+      <label class="group-row">
+        <span data-i18n="rules.type"></span>
+        <select class="row-select" id="rule-type"></select>
+      </label>
+      <div class="group-field">
+        <label for="rule-value" data-i18n="rules.value"></label>
+        <input class="row-input" id="rule-value" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="rule-value-hint rule-value-error">
+      </div>
+      <label class="group-row">
+        <span data-i18n="rules.policy"></span>
+        <select class="row-select" id="rule-policy"></select>
+      </label>
+      <label class="group-row" id="rule-no-resolve-row">
+        <span class="list-text"><span data-i18n="rules.noResolve"></span><span class="hint" data-i18n="rules.noResolveHint"></span></span>
+        <input class="switch" type="checkbox" id="rule-no-resolve">
+      </label>
+    </div>
+    <span class="hint" id="rule-value-hint"></span>
+    <span class="field-error" id="rule-value-error" hidden></span>
+    <div class="preview-box">
+      <span class="hint" data-i18n="rules.preview"></span>
+      <code id="rule-preview"></code>
+    </div>
+    <button class="btn btn-danger-text" id="rule-delete" data-i18n="rules.delete"></button>
+  </div>
+</div>
 
 <dialog class="dialog" id="error-dialog" aria-labelledby="error-title">
   <h2 id="error-title"></h2>

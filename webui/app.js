@@ -4,6 +4,7 @@ import { initStatus, refreshStatus } from './status.js';
 import { loadDraft } from './draft.js';
 import { initEditor } from './editor.js';
 import { initSubscriptions } from './subscriptions-card.js';
+import { initRules } from './rules-card.js';
 
 async function renderVersions() {
   const prop = await readFile(`${MODDIR}/module.prop`);
@@ -22,4 +23,5 @@ renderVersions();
 initStatus(renderVersions);
 initEditor(() => Promise.all([refreshStatus(), renderVersions()]));
 initSubscriptions();
+initRules();
 loadDraft();
