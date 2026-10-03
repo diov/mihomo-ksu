@@ -47,8 +47,9 @@
 - `style.css`：设计稿的颜色、圆角、间距定义为语义 token，深色模式下重新定义同一组 token（`prefers-color-scheme`）。
 - `device.js`：封装 `exec()`，提供读文件、写文件（base64）、调用 API（curl + stdin 传 secret）、执行 `ctl.sh`，其余模块只通过它访问设备。
 - `i18n.js`：`t(key)` 与语言选择（见已定事项 2）。
+- YAML 解析统一使用 `load(text, { schema: CORE_SCHEMA.withTags(mergeTag) })`：js-yaml 5 的默认 schema 不带合并键 [已验证 via js-yaml 5.4.2 `dist/js-yaml.d.ts`]，不开启时 `base.yaml` 的 `<<: *region` 会被当成普通键，生成的代理组缺少 `type`，`mihomo -t` 失败 [已验证 via 本地端到端合并]。
 - 页面只有顶部栏：模块版本、内核版本。
-- 验证：在 KSU 管理器中打开模块 WebUI 能看到两个版本号；切换系统深色模式后颜色跟随。
+- 验证：在 KSU 管理器中打开模块 WebUI 能看到两个版本号；切换系统深色模式后颜色跟随；在页面中解析设备上的 `base.yaml`，结果里没有 `<<` 键，HK 组带有 `type`。
 
 ### C5.3 `feat(webui): status card`
 - 设计稿"主页 · 正常"与"模板更新 + 异常"中的运行状态卡片：后台检查进程、控制器（`/version`）、Tun（`/configs` 的 `tun.enable`）。全部正常时只显示一行"运行中"和 pid；有异常时以第一项异常为标题（未运行 / 控制器不可用 / Tun 未启动），附可能原因、处理办法和日志末尾 20 行。私人 DNS 未关闭时显示提示。

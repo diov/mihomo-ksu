@@ -12,6 +12,8 @@ WebUI（`webui/merge.js`）与本文的权威规范。实现、测试与本文�
 
 override 是一个 mihomo 配置片段，只写与 base 不同的部分。
 
+`base.yaml` 与 `override.yaml` 按 YAML 1.2 Core Schema 解析，并开启合并键 `<<`（与 mihomo 使用的 go-yaml v3 一致；`base.yaml` 的代理组依赖它）。合并在解析后的对象上进行，锚点和合并键在解析时已经展开。
+
 ## 合并步骤
 
 按顺序执行：
