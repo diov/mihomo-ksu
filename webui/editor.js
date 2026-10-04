@@ -59,7 +59,7 @@ function renderSaveBar() {
   }
 }
 
-async function save() {
+export async function save() {
   const buttons = document.querySelectorAll('[data-action="save"]');
   for (const b of buttons) {
     b.disabled = true;

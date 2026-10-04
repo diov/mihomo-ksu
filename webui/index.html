@@ -17,6 +17,20 @@
 </header>
 
 <main class="content">
+  <section class="banner" id="banner" aria-labelledby="banner-title" hidden>
+    <div class="banner-body">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 20h14"/></svg>
+      <div class="list-text">
+        <h2 id="banner-title" data-i18n="banner.title"></h2>
+        <p id="banner-desc"></p>
+      </div>
+    </div>
+    <div class="banner-actions">
+      <button class="btn btn-info-text" id="banner-preview" data-i18n="banner.preview"></button>
+      <button class="btn btn-info" id="banner-apply" data-i18n="banner.apply"></button>
+    </div>
+  </section>
+
   <section class="card" id="status" aria-live="polite">
     <div class="card-header">
       <div class="status-title">

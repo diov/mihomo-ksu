@@ -22,6 +22,8 @@
   --on-error-container: #7a1a14;
   --info-container: #d4e6fb;
   --on-info-container: #0d2f52;
+  --info: #1d4f86;
+  --on-info: #ffffff;
 
   --code-bg: #1c2121;
   --code-text: #d9e5e3;
@@ -69,6 +71,8 @@
     --on-error-container: #ffdad6;
     --info-container: #0f3558;
     --on-info-container: #d4e6fb;
+    --info: #a6c8f0;
+    --on-info: #0d2f52;
 
     --code-bg: #0b0f0f;
     --code-text: #d9e5e3;
@@ -137,6 +141,46 @@ body {
 
 .card-header .muted {
   margin: 0;
+}
+
+/* Template update banner, above the status card. */
+.banner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius-card);
+  background: var(--info-container);
+  color: var(--on-info-container);
+}
+
+.banner-body {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.banner-body svg {
+  flex: none;
+  margin-top: 1px;
+}
+
+.banner h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.banner p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.banner-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
 }
 
 .status-title {
@@ -265,6 +309,17 @@ body {
 .btn-secondary {
   background: var(--primary-container);
   color: var(--on-primary-container);
+}
+
+.btn-info {
+  background: var(--info);
+  color: var(--on-info);
+}
+
+.btn-info-text {
+  padding: 0 var(--space-3);
+  background: none;
+  color: var(--on-info-container);
 }
 
 [hidden] {

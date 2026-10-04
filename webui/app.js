@@ -5,6 +5,7 @@ import { loadDraft } from './draft.js';
 import { initEditor } from './editor.js';
 import { initSubscriptions } from './subscriptions-card.js';
 import { initRules } from './rules-card.js';
+import { initBanner, refreshBanner } from './banner.js';
 
 async function renderVersions() {
   const prop = await readFile(`${MODDIR}/module.prop`);
@@ -21,7 +22,8 @@ async function renderVersions() {
 translatePage();
 renderVersions();
 initStatus(renderVersions);
-initEditor(() => Promise.all([refreshStatus(), renderVersions()]));
+initEditor(() => Promise.all([refreshStatus(), renderVersions(), refreshBanner()]));
+initBanner();
 initSubscriptions();
 initRules();
 loadDraft();

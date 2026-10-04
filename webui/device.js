@@ -56,6 +56,11 @@ export function commitConfig(overrideTmp, configTmp) {
   );
 }
 
+// template.sh changed exits 0 when base.yaml differs from the one config.yaml was generated from.
+export async function templateChanged() {
+  return (await exec(`${MODDIR}/scripts/template.sh changed`)).errno === 0;
+}
+
 export async function logTail(lines) {
   return sh(`tail -n ${Number(lines)} ${DATA}/log/mihomo.log`);
 }

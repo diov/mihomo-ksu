@@ -2,6 +2,13 @@ export default {
   'header.versions': '模块 {module} · 内核 {core}',
   'header.coreUnavailable': '不可用',
 
+  'banner.title': '模板已更新',
+  'banner.desc': '模块升级带来了新的 base.yaml，当前仍在使用旧配置。应用后会用你的 override 重新生成配置。',
+  'banner.descDirty': '模块升级带来了新的 base.yaml，当前仍在使用旧配置。保存未保存的改动时会一并应用新模板。',
+  'banner.preview': '查看合并结果',
+  'banner.apply': '应用',
+  'banner.applying': '正在应用…',
+
   'status.checking': '正在检查…',
   'status.running': '运行中',
   'status.pid': 'pid {pid}',
