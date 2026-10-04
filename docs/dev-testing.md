@@ -40,6 +40,8 @@
 - **不要用 `adb shell input text`**：中文输入法会把字符转成全角。先真实点击输入框（弹出键盘），再用 JS 设置 `value` 并派发 `input` 事件。
 - 输入法：KernelSU Next 消费了窗口 insets，键盘弹出时 WebView 不缩小，页面拿不到键盘高度（`innerHeight`、`visualViewport`、VirtualKeyboard API、`interactive-widget` 均无效）。因此带输入的表单用全屏页（`plans/c5-webui.md` 已定事项）。
 - 截图：`adb exec-out screencap -p > shot.png`；截图会包含屏幕上的真实数据，测试真实配置时注意隐私。
+- 系统文件选择器（`<input type=file>` 打开的 DocumentsUI）：测试文件 `adb push` 到 `/sdcard/Download/`（最新的排在最前），用 `adb exec-out uiautomator dump /dev/tty` 找到 `text="<文件名>"` 的 `bounds` 再点击；文件不在屏幕内时找不到，不要盲点。
+- 清理 `/sdcard` 上的测试文件用非 root 的 `adb shell rm`：root 删除不会同步媒体库，选择器里会留下已不存在的条目（可用 `content query --uri content://media/external/file` 查看）。
 
 ## 用真实配置测试保存
 
