@@ -138,7 +138,7 @@ KernelSU / APatch 模块：开机后台运行 mihomo，以 Tun 模式做全局�
 ## 11. 订阅中的规则不使用
 
 - mihomo 解析 proxy-provider 时只读 `proxies` 字段，订阅里的 `rules`、`proxy-groups` 等被忽略 [已验证 via mihomo `adapter/provider/provider.go` `ProxySchema`]。
-- 否决的备选：保存时把订阅规则抄进配置（映射策略名）。只是保存时的快照，订阅更新后不跟随；以作者的订阅为例有 4280 条内联规则，`config.yaml` 会从约 6KB 涨到约 200KB，超过 WebUI 单条命令写文件的长度上限（约 128KB）；也违背 #2 去掉内联规则的初衷。
+- 否决的备选：保存时把订阅规则抄进配置（映射策略名）。只是保存时的快照，订阅更新后不跟随；以作者的订阅为例有 4280 条内联规则，`config.yaml` 会从约 6KB 涨到约 200KB；也违背 #2 去掉内联规则的初衷。
 - 否决的备选：运行时把订阅规则按策略拆成多个 rule-set。实现复杂，mihomo 没有订阅更新后的回调可用。
 - 订阅里的规则与 base 的 GEOSITE 分类大体重合（按分类名对比，未逐条核对）；缺少的个别规则用前置规则补。
 
