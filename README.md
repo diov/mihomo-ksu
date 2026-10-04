@@ -23,3 +23,7 @@ Runtime data lives in `/data/adb/mihomo-ksu/` (config, subscriptions cache, geo 
 ```sh
 su -c rm -rf /data/adb/mihomo-ksu
 ```
+
+## License
+
+MIT. The module zip also bundles mihomo, metacubexd, the meta-rules-dat geo data, js-yaml and the kernelsu JS library under their own licenses; see [`module/licenses/README.md`](module/licenses/README.md) (`licenses/` in the zip, with the full texts).

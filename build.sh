@@ -57,6 +57,7 @@ fetch_pinned "https://registry.npmjs.org/js-yaml/-/js-yaml-$JS_YAML_VERSION.tgz"
   "$CACHE/js-yaml-$JS_YAML_VERSION.tgz" "$JS_YAML_SHA256"
 fetch_pinned "https://registry.npmjs.org/kernelsu/-/kernelsu-$KERNELSU_VERSION.tgz" \
   "$CACHE/kernelsu-$KERNELSU_VERSION.tgz" "$KERNELSU_SHA256"
+fetch_pinned https://www.apache.org/licenses/LICENSE-2.0.txt "$CACHE/apache-2.0.txt" "$APACHE_LICENSE_SHA256"
 
 # Same sources as mihomo's own updaters (docs/decisions.md #10), re-downloaded on every build.
 mihomo_version=$(curl -fsSL --retry 3 https://github.com/MetaCubeX/mihomo/releases/latest/download/version.txt) ||
@@ -66,6 +67,10 @@ fetch "https://github.com/MetaCubeX/mihomo/releases/latest/download/mihomo-andro
 fetch https://github.com/MetaCubeX/metacubexd/archive/refs/heads/gh-pages.zip "$CACHE/latest/metacubexd.zip"
 fetch https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geoip.dat "$CACHE/latest/GeoIP.dat"
 fetch https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geosite.dat "$CACHE/latest/GeoSite.dat"
+# License texts of the latest components (docs/plans/v0.1.md C7); HEAD is each default branch.
+for repo in mihomo metacubexd meta-rules-dat; do
+  fetch "https://raw.githubusercontent.com/MetaCubeX/$repo/HEAD/LICENSE" "$CACHE/latest/$repo.LICENSE"
+done
 
 rm -rf "$STAGE"
 mkdir -p "$STAGE/bin" "$STAGE/assets" "$STAGE/webroot/vendor"
@@ -81,6 +86,12 @@ gunzip -c "$CACHE/latest/mihomo.gz" >"$STAGE/bin/mihomo"
 unzip -q "$CACHE/latest/metacubexd.zip" -d "$STAGE/assets"
 mv "$STAGE/assets/metacubexd-gh-pages" "$STAGE/assets/ui"
 cp "$CACHE/latest/GeoIP.dat" "$CACHE/latest/GeoSite.dat" "$STAGE/assets/"
+cp LICENSE "$STAGE/"
+for repo in mihomo metacubexd meta-rules-dat; do
+  cp "$CACHE/latest/$repo.LICENSE" "$STAGE/licenses/$repo.txt"
+done
+tar -xzf "$CACHE/js-yaml-$JS_YAML_VERSION.tgz" -O package/LICENSE >"$STAGE/licenses/js-yaml.txt"
+cp "$CACHE/apache-2.0.txt" "$STAGE/licenses/kernelsu.txt"
 
 zip_name=mihomo-ksu-$version.zip
 rm -f "$DIST/$zip_name"
