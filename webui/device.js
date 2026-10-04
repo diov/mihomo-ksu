@@ -24,12 +24,19 @@ async function sh(command) {
   return stdout;
 }
 
+// The manager returns stdout as lines joined by "\n", dropping the final newline and any \r,
+// so file contents travel as base64 to come back byte for byte.
+async function readBase64(command) {
+  const b64 = (await sh(command)).replace(/\s/g, '');
+  return new TextDecoder().decode(Uint8Array.from(atob(b64), (c) => c.charCodeAt(0)));
+}
+
 export function readFile(path) {
-  return sh(`cat ${quote(path)}`);
+  return readBase64(`base64 ${quote(path)}`);
 }
 
 export function readFileIfExists(path) {
-  return sh(`[ ! -f ${quote(path)} ] || cat ${quote(path)}`);
+  return readBase64(`[ ! -f ${quote(path)} ] || base64 ${quote(path)}`);
 }
 
 // base64 keeps YAML quotes, $ and newlines away from the shell.
