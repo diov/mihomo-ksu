@@ -56,9 +56,9 @@ KernelSU / APatch 模块：开机后台运行 mihomo，以 Tun 模式做全局�
   - Magisk：不在支持范围内（需要借助第三方 WebUI X 之类的 App）。
 - 规则不再内联：改用 `GEOSITE`、`GEOIP`，数据来自 MetaCubeX/meta-rules-dat 的 `geosite.dat` 和 `geoip.dat`。构建时打包一份，运行时靠 `geo-auto-update` 自动更新（存放位置见 #6）。
 
-## 5. Captive portal：暂缓，优先级最低
+## 5. Captive portal：v0.2 最后一步
 
-不在 v0.1 范围，先完成配置管理。以下分析保留，作为将来重新评估的起点。
+不在 v0.1 范围，先完成配置管理；v0.2 排在最后（见 `plans/v0.2.md` 第 4 步）。以下分析是 spike 的起点。
 
 根因推断如下（**尚未在真机上验证**）：
 
@@ -71,6 +71,7 @@ KernelSU / APatch 模块：开机后台运行 mihomo，以 Tun 模式做全局�
 - **A（配置层，候选）**：
   - 把 `com.android.captiveportallogin` / `com.google.android.captiveportallogin` 加入 `exclude-package`（meta-docs 示例即为此包名）。
   - 探测域名改为直连，并使用系统 DNS 解析。
+  - 或者用 `tun.exclude-uid` 排除探测进程，让探测完全不进 Tun。探测由 NetworkStack 发出，uid 为 `network_stack`（1073）[已验证 via AOSP `android_filesystem_config.h` `AID_NETWORK_STACK`]；sing-tun 先把 `exclude-package` 换算成 uid，再与 `exclude-uid` 一起生成 ip rule，所以 `exclude-uid` 在 Android 上同样有效 [已验证 via MetaCubeX/sing-tun `tun_rules.go`]。待 spike 确认：设备上的探测是否确实以 1073 发出，它的 DNS 查询（由 netd 代发）是否也被排除。
 - **B（watcher，候选）**：
   - 设想：网络未通过系统验证时，通过 `PATCH /configs` 关闭 tun，验证通过后再开启。[已验证 via mihomo `hub/route/configs.go`：PATCH 的 schema 中包含 `tun` 字段]
   - 风险：手机上 Wi-Fi 和移动数据经常同时在线，"某个网络未验证"并不能推出"应该暂停代理"，误判会让流量绕过代理。应先在真机上验证 A 的效果，以及多网络并存时的系统行为，再决定是否引入。
