@@ -21,7 +21,7 @@
 `tools/sync-webroot.sh` 把 `webui/` 复制到已安装模块的 `webroot/`，保持安装器设置的属主 `root:root`、权限 644 与 SELinux 上下文 `u:object_r:system_file:s0`；加 `--module` 同时同步 `service.sh`、`action.sh`、`scripts/*.sh`（755）。之后在 WebUI 里刷新即可。
 
 - 这会让设备上的模块与已安装的 zip 不一致；发布前的验证要重新构建并安装 zip。
-- **当前状态（2026-10-04）**：设备上的 webroot 与模块脚本已同步到 C5.8，已安装的 zip 较旧，下次开始工作前建议重新构建并安装。
+- **当前状态（2026-10-04）**：设备上安装的是 CI 发布的 `v0.0.1`（与 main 的 C6 一致，测试 release 已删除），没有开发同步的改动。
 
 ## WebView 调试（在页面里执行 JS）
 
