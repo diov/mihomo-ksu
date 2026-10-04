@@ -37,10 +37,13 @@ function countRules(before, after) {
 
 const RULE_KEYS = new Set(['prepend-rules', 'append-rules']);
 
-export function countChanges(saved, draft) {
+// files: subscriptions with a newly picked file; one whose entry is otherwise unchanged counts once.
+export function countChanges(saved, draft, files = []) {
   const before = saved ?? {};
   const after = draft ?? {};
-  let count = 0;
+  const providersBefore = isMap(before['proxy-providers']) ? before['proxy-providers'] : {};
+  const providersAfter = isMap(after['proxy-providers']) ? after['proxy-providers'] : {};
+  let count = files.filter((name) => deepEqual(providersBefore[name], providersAfter[name])).length;
   for (const key of new Set([...Object.keys(before), ...Object.keys(after)])) {
     const a = before[key];
     const b = after[key];

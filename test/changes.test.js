@@ -47,3 +47,11 @@ test('an empty override on either side compares as no keys', () => {
   assert.equal(countChanges(undefined, { 'proxy-providers': { a: { url: 'u' } } }), 1);
   assert.equal(countChanges(saved, null), 5);
 });
+
+test('a newly picked file counts once unless its subscription already changed', () => {
+  const saved = { 'proxy-providers': { local: { type: 'file' }, airport: { url: 'https://a.example' } } };
+  assert.equal(countChanges(saved, saved, ['local']), 1);
+  const renamed = { 'proxy-providers': { mine: { type: 'file' }, airport: { url: 'https://a.example' } } };
+  assert.equal(countChanges(saved, renamed, ['mine']), 2);
+  assert.equal(countChanges(null, { 'proxy-providers': { local: { type: 'file' } } }, ['local']), 1);
+});

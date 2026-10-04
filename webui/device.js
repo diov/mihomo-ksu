@@ -51,15 +51,24 @@ export async function testConfig(path) {
   return { ok: errno === 0, output: stdout };
 }
 
+export function makeDir(path) {
+  return sh(`mkdir -p ${quote(path)}`);
+}
+
 export function removeFiles(...paths) {
   return sh(`rm -f ${paths.map(quote).join(' ')}`);
 }
 
-// Replaces both files, then records the base.yaml they were built from and clears the description hint.
-export function commitConfig(overrideTmp, configTmp) {
+// Moves subscription files ([from, to] pairs) and both configs into place, then records the
+// base.yaml they were built from and clears the description hint.
+export function commitConfig(overrideTmp, configTmp, moves) {
   return sh(
-    `mv ${quote(overrideTmp)} ${DATA}/override.yaml && mv ${quote(configTmp)} ${DATA}/config.yaml && ` +
+    [
+      ...moves.map(([from, to]) => `mv ${quote(from)} ${quote(to)}`),
+      `mv ${quote(overrideTmp)} ${DATA}/override.yaml`,
+      `mv ${quote(configTmp)} ${DATA}/config.yaml`,
       `${MODDIR}/scripts/template.sh applied`,
+    ].join(' && '),
   );
 }
 

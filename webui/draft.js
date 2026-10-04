@@ -1,5 +1,5 @@
 // The override being edited: the saved text on disk and the unsaved draft, plus the save flow.
-import { DATA, MODDIR, api, commitConfig, readFile, readFileIfExists, removeFiles, testConfig, writeFile } from './device.js';
+import { DATA, MODDIR, api, commitConfig, makeDir, readFile, readFileIfExists, removeFiles, testConfig, writeFile } from './device.js';
 import { countChanges, deepEqual } from './changes.js';
 import { MergeError, merge } from './merge.js';
 import { YAMLException, parse, stringify } from './yaml.js';
@@ -20,6 +20,8 @@ export class SaveError extends Error {
 
 let saved = '';
 let draft = '';
+// Subscription name → { fileName, text, nodes } of a picked file, written to its path on save.
+let files = new Map();
 let base = null;
 const listeners = new Set();
 const notify = () => listeners.forEach((fn) => fn());
@@ -30,7 +32,13 @@ export async function loadDraft() {
 }
 
 export const getDraft = () => draft;
-export const isDirty = () => draft !== saved;
+export const isDirty = () => draft !== saved || files.size > 0;
+export const getFiles = () => new Map(files);
+
+export function setFiles(next) {
+  files = next;
+  notify();
+}
 export const onDraftChange = (fn) => listeners.add(fn);
 
 export function setDraft(text) {
@@ -61,13 +69,14 @@ export function updateDraft(fn) {
 
 export function discardDraft() {
   draft = saved;
+  files = new Map();
   notify();
 }
 
 // null when the draft does not parse; the bar then shows no number.
 export function changeCount() {
   try {
-    return countChanges(parse(saved), parse(draft));
+    return countChanges(parse(saved), parse(draft), [...files.keys()]);
   } catch {
     return null;
   }
@@ -84,29 +93,52 @@ function parseOverride(text) {
   }
 }
 
-// The config.yaml text the draft would produce.
-export async function buildConfig(text = draft) {
+async function mergeOverride(text) {
   const override = parseOverride(text);
   try {
-    return CONFIG_HEADER + stringify(merge(await getBase(), override));
+    return merge(await getBase(), override);
   } catch (err) {
     if (err instanceof MergeError) throw new SaveError('merge', { code: err.code, params: err.params });
     throw err;
   }
 }
 
+// The config.yaml text the draft would produce.
+export async function buildConfig(text = draft) {
+  return CONFIG_HEADER + stringify(await mergeOverride(text));
+}
+
+// Writes each picked file next to its path in the merged config (relative paths are under the
+// data directory, mihomo's home) and returns the [tmp, path] moves that put them in place.
+async function stageFiles(config, picked) {
+  const moves = [];
+  for (const [name, { text }] of picked) {
+    // The subscription may have been removed in the YAML editor since its file was picked.
+    const path = config['proxy-providers']?.[name]?.path;
+    if (!path) continue;
+    const target = path.startsWith('/') ? path : `${DATA}/${path.replace(/^\.\//, '')}`;
+    await makeDir(target.slice(0, target.lastIndexOf('/')));
+    await writeFile(`${target}.tmp`, text);
+    moves.push([`${target}.tmp`, target]);
+  }
+  return moves;
+}
+
 export async function saveDraft() {
   const text = draft;
-  const config = await buildConfig(text);
+  const picked = files;
+  const config = await mergeOverride(text);
   await writeFile(OVERRIDE_TMP, text);
-  await writeFile(CONFIG_TMP, config);
+  await writeFile(CONFIG_TMP, CONFIG_HEADER + stringify(config));
+  // mihomo -t does not read type: file providers, so their files can follow the test.
   const test = await testConfig(CONFIG_TMP);
   if (!test.ok) {
     await removeFiles(OVERRIDE_TMP, CONFIG_TMP);
     throw new SaveError('validate', { output: test.output });
   }
-  await commitConfig(OVERRIDE_TMP, CONFIG_TMP);
+  await commitConfig(OVERRIDE_TMP, CONFIG_TMP, await stageFiles(config, picked));
   saved = text;
+  files = new Map();
   notify();
   try {
     await api('PUT', '/configs?force=true', { path: '', payload: '' });

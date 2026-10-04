@@ -157,19 +157,35 @@
     <button class="btn btn-primary" id="sub-done" data-i18n="subEdit.done"></button>
   </header>
   <div class="page-body">
+    <div class="segmented" id="sub-source" role="radiogroup" data-i18n-label="subEdit.source">
+      <button role="radio" data-source="url" data-i18n="subEdit.sourceUrl"></button>
+      <button role="radio" data-source="file" data-i18n="subEdit.sourceFile"></button>
+    </div>
     <div class="field">
       <label for="sub-name" data-i18n="subEdit.name"></label>
       <input class="input" id="sub-name" autocomplete="off" autocapitalize="off" aria-describedby="sub-name-hint sub-name-error">
       <span class="hint" id="sub-name-hint" data-i18n="subEdit.nameHint"></span>
       <span class="field-error" id="sub-name-error" hidden></span>
     </div>
-    <div class="field">
+    <div class="field" id="sub-url-field">
       <label for="sub-url" data-i18n="subEdit.url"></label>
       <textarea class="input input-mono" id="sub-url" rows="3" spellcheck="false" autocapitalize="off" aria-describedby="sub-url-hint sub-url-error"></textarea>
       <span class="hint" id="sub-url-hint" data-i18n="subEdit.urlHint"></span>
       <span class="field-error" id="sub-url-error" hidden></span>
     </div>
-    <div class="field">
+    <div class="field" id="sub-file-field">
+      <label for="sub-file-pick" data-i18n="subEdit.file"></label>
+      <button class="btn btn-secondary btn-pick" id="sub-file-pick" data-i18n="subEdit.pickFile" aria-describedby="sub-file-hint sub-file-error"></button>
+      <div class="file-box" id="sub-file-box">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V7z"/><path d="M14 3v4h4"/><path d="M9 13h6M9 17h4"/></svg>
+        <span class="list-text"><span class="row-name" id="sub-file-name"></span><span class="hint" id="sub-file-detail"></span></span>
+        <button class="btn btn-plain" id="sub-file-repick" data-i18n="subEdit.repickFile"></button>
+      </div>
+      <input type="file" id="sub-file-input" hidden>
+      <span class="hint" id="sub-file-hint" data-i18n="subEdit.fileHint"></span>
+      <span class="field-error" id="sub-file-error" hidden></span>
+    </div>
+    <div class="field" id="sub-interval-field">
       <label for="sub-interval" data-i18n="subEdit.interval"></label>
       <select class="input" id="sub-interval" aria-describedby="sub-interval-hint"></select>
       <span class="hint" id="sub-interval-hint" data-i18n="subEdit.intervalHint"></span>
