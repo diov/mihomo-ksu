@@ -86,4 +86,20 @@ zip_name=mihomo-ksu-$version.zip
 rm -f "$DIST/$zip_name"
 (cd "$STAGE" && zip -qrX "../$zip_name" .)
 
+# The manager's update check (docs/plans/v0.1.md C6): the zip and changelog.md are assets of
+# this tag's release, which sits next to the latest release that updateJson points at.
+rm -f "$DIST/update.json"
+if [ "$version_code" -ne 0 ]; then
+  update_json=$(sed -n 's/^updateJson=//p' module/module.prop)
+  release=${update_json%latest/download/update.json}download/$version
+  cat >"$DIST/update.json" <<EOF
+{
+  "version": "$version",
+  "versionCode": $version_code,
+  "zipUrl": "$release/$zip_name",
+  "changelog": "$release/changelog.md"
+}
+EOF
+fi
+
 echo "built $DIST/$zip_name (versionCode $version_code, mihomo $mihomo_version)"

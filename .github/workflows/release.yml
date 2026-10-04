@@ -1,0 +1,36 @@
+# Publishes a release for a pushed vX.Y.Z tag: the module zip, update.json and changelog.md.
+name: release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # The notes are the tag annotation, which checkout keeps by fetching the tag ref itself.
+      - name: Release notes
+        run: |
+          if [ "$(git cat-file -t "$GITHUB_REF_NAME")" != tag ]; then
+            echo "::error::$GITHUB_REF_NAME has no annotation; tag with git tag -a"
+            exit 1
+          fi
+          mkdir -p dist
+          git tag -l --format='%(contents)' "$GITHUB_REF_NAME" >dist/changelog.md
+
+      - run: node --test
+
+      - run: ./build.sh
+
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes-file dist/changelog.md \
+            "dist/mihomo-ksu-$GITHUB_REF_NAME.zip" dist/update.json dist/changelog.md

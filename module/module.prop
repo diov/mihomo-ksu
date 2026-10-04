@@ -4,3 +4,4 @@ version=
 versionCode=
 author=diov
 description=Run mihomo in Tun mode at boot, with a WebUI for config management.
+updateJson=https://github.com/diov/mihomo-ksu/releases/latest/download/update.json
