@@ -38,6 +38,7 @@
 
 - **调用 API**：`printf 'Authorization: Bearer %s' "$(cat secret)" | curl -H @- ...`。`printf` 是 shell 内建命令，secret 只经过 stdin，不出现在任何进程的命令行里 [已验证 via adb：带真实 secret 返回 200]。
 - **写文件**：内容在 JS 中 base64 编码，用 `echo <b64> | base64 -d > <tmp>` 写入，避免 YAML 中的引号、`$` 等字符被 shell 解释。
+- **读文件**：同样经过 base64（`base64 <file>`，在 JS 中解码）。管理器把 stdout 按行读取后用 `\n` 拼接，末尾换行会丢失，`\r\n` 会变成 `\n` [已验证 via KernelSU Next `WebViewInterface.kt` 与 libsu `StreamGobbler.java`]；直接 `cat` 时，保存会改写用户未改动的 `override.yaml`。
 - **保存流程**：
   1. 解析 override，执行 `merge`；报错就显示错误，不写任何文件。
   2. 把 override 写到 `override.yaml.tmp`，把合并结果写到 `config.yaml.tmp`，都放在数据目录（同一文件系统，`mv` 是原子操作）。
