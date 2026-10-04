@@ -138,10 +138,13 @@ KernelSU / APatch 模块：开机后台运行 mihomo，以 Tun 模式做全局�
 - **面板和 geo 放在数据目录**，仅在不存在时拷入，自更新的结果可以跨模块升级保留（见 #6）。它们不受模板约束。
 - **内核位置不影响生命周期**：KSU 禁用或删除模块时，只是在模块目录中创建 `disable` 或 `remove` 标记，不会结束正在运行的进程。下次开机时，KSU 对禁用的模块跳过 `service.sh`；对删除的模块，在 post-fs-data 阶段执行 `uninstall.sh` 后删除模块目录。[已验证 via KernelSU `userspace/ksud/src/module.rs`、`init_event.rs`] APatch 的行为[未验证]。
 
-## 11. 订阅中的规则不使用
+## 11. 规则来源：geo 数据 + 自定义规则
 
-- mihomo 解析 proxy-provider 时只读 `proxies` 字段，订阅里的 `rules`、`proxy-groups` 等被忽略 [已验证 via mihomo `adapter/provider/provider.go` `ProxySchema`]。
-- 否决的备选：保存时把订阅规则抄进配置（映射策略名）。只是保存时的快照，订阅更新后不跟随；以作者的订阅为例有 4280 条内联规则，`config.yaml` 会从约 6KB 涨到约 200KB；也违背 #2 去掉内联规则的初衷。
-- 否决的备选：运行时把订阅规则按策略拆成多个 rule-set。实现复杂，mihomo 没有订阅更新后的回调可用。
-- 订阅里的规则与 base 的 GEOSITE 分类大体重合（按分类名对比，未逐条核对）；缺少的个别规则用前置规则补。
-
+- **订阅中的规则不使用**：mihomo 解析 proxy-provider 时只读 `proxies` 字段，订阅里的 `rules`、`proxy-groups` 等被忽略 [已验证 via mihomo `adapter/provider/provider.go` `ProxySchema`]。
+  - 否决的备选：保存时把订阅规则抄进配置（映射策略名）。只是保存时的快照，订阅更新后不跟随；以作者的订阅为例有 4280 条内联规则，`config.yaml` 会从约 6KB 涨到约 200KB；也违背 #2 去掉内联规则的初衷。
+  - 否决的备选：运行时把订阅规则按策略拆成多个 rule-set。实现复杂，mihomo 没有订阅更新后的回调可用。
+  - 订阅里的规则与 base 的 GEOSITE 分类大体重合（按分类名对比，未逐条核对）；缺少的个别规则用前置规则补。
+- **不做规则集（rule-providers）**：按服务分流用前置规则 `GEOSITE,<分类>,<策略>`，geo 数据之外的个别需求用 `DOMAIN-SUFFIX`、`PROCESS-NAME` 等自定义规则补。
+  - 随包 geosite 有 1552 个分类（含 `openai`、`anthropic`、`github`、`tiktok`、`category-ai-!cn` 等），geoip 有 260 个；`geo-auto-update` 每 24 小时更新，与规则集通常的更新间隔相同。[已验证 via 解析 meta-rules-dat latest 的 `GeoSite.dat` / `GeoIP.dat`，2026-10-05]
+  - 规则集的 `behavior`、`format` 由文件内容决定，填错时 mihomo 不报错：格式错则规则数为 0，classical 文件当成 `domain` 会把 `DOMAIN-SUFFIX,…` 整行当作域名、永不匹配；`mihomo -t` 不下载规则集，也发现不了。最常用的 Loyalsoldier/clash-rules 的 `.txt` 内容是 YAML，无法按扩展名推断。[已验证 via 本地 mihomo v1.19.32 载入 Loyalsoldier/clash-rules、blackmatrix7/ios_rule_script 的文件]
+  - 覆盖不到：大规模去广告（geosite `category-ads-all` 只有 911 条），base 本就不做。出现 geosite 分类与自定义规则都解决不了的常见需求时再评估。
