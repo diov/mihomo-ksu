@@ -45,7 +45,7 @@ override 是一个 mihomo 配置片段，只写与 base 不同的部分。
 - `<entry>` 必须是 map（例如只写了名称、没有写任何字段时为 `null`），否则报错。
 - `x-provider-defaults` 本身原样保留在 `config.yaml` 中，mihomo 忽略不认识的顶层键。
 
-通常每条订阅只需要写 `url`。
+通常每条订阅只需要写 `url`。从文件导入的订阅写 `type: file`（不写 `url`、`interval`），补齐规则相同；文件内容由 WebUI 在保存时写到生成的 `path`。
 
 ### 3. 规则插入
 

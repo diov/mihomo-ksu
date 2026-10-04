@@ -83,8 +83,11 @@ KernelSU / APatch 模块：开机后台运行 mihomo，以 Tun 模式做全局�
   - geo 数据：`GeoIP.dat`、`GeoSite.dat` 放在 home dir 根目录。mihomo 只在 home dir 根目录查找这两个文件，不认子目录。[已验证 via mihomo `constant/path.go` `GeoIP()`/`GeoSite()`] 安装时仅在文件不存在时拷入，之后由 `geo-auto-update` 或面板更新（见 #10）。
   - 面板（metacubexd，见 #9）：放在 `ui/`，配置中写 `external-ui: ui`，不设置 `external-ui-name` 和 `external-ui-url`（后者默认就是 metacubexd 的 gh-pages）。`external-ui` 必须位于 home dir 内（或 `SAFE_PATHS` 中），否则配置解析报错。[已验证 via mihomo `config/config.go` `IsSafePath`、默认 `ExternalUIURL`] 安装时仅在 `ui/` 不存在或为空时拷入，之后由面板自更新（见 #10）。`ui/` 为空时 mihomo 启动也会自动下载面板。[已验证 via mihomo `component/updater/update_ui.go` `AutoDownloadUI()`]
   - 旧模块以模块目录为 home dir，升级时 provider 缓存和 geo 更新都会丢失，所以没有照搬。目录不放在 `/sdcard`：配置里有订阅 token，`/sdcard` 上的文件任何有存储权限的应用都能读到。另外 `/data/adb` 不依赖 `/sdcard` 解密，也就不用像以前那样等用户解锁。
-- **电脑编辑的导入导出**：`/data/adb` 只有 root 能访问，无法通过 MTP 或普通的 `adb push` 写入。WebUI 提供"导入"和"导出"两个按钮，以 root 读写固定的中转路径 `/sdcard/Download/mihomo-ksu/override.yaml`。导入走与保存相同的流程（合并、`mihomo -t` 校验、落盘、热重载），校验不通过就不落盘。中转文件里有订阅 token，有存储权限的 App 都能读到，所以导入、导出完成后 WebUI 提示用户删除它。
-  - 否决的备选：使用 `<input type=file>` 选择文件。KSU WebView 是否支持文件选择[未验证]；用固定路径加 root 读写，不依赖这项支持。
+- **从文件导入订阅**：网络不好时，mihomo 启动前可能拉不到订阅链接，没有节点也就没有代理去拉它。订阅编辑页可以选择来源"本地文件"：用户用系统文件选择器选一个订阅文件（完整 Clash 配置或 v2rayN 风格的节点列表），保存时复制到该订阅的缓存位置 `providers/<name>.yaml`，作为固定配置（mihomo `type: file`），不自动更新。原文件不被引用，之后移动或删除都不影响。
+  - KernelSU Next、KernelSU、APatch 的 WebView 都实现了 `onShowFileChooser` [已验证 via 三者的 `WebUIActivity.kt` / `WebViewHelper.kt`]；页面只拿到文件内容，拿不到路径。
+  - 网络恢复后把来源改成"订阅链接"即可自动更新：两种来源的缓存位置相同，http 订阅启动时先加载已有文件，再按间隔从链接更新，更新失败时保留旧节点 [已验证 via mihomo `component/resource/fetcher.go` `Initial()`]。
+  - 不从文件内容中识别订阅链接：Clash 配置没有约定记录自己的订阅链接，作者的订阅文件中也没有（只有 DNS 的 DoH 地址）[已验证 via adb，只统计结构]。
+  - 否决的备选：以 root 读写固定中转路径 `/sdcard/Download/mihomo-ksu/override.yaml` 导入导出 override。override 修改频率低，在 WebUI 的 YAML 编辑页复制粘贴即可；中转文件里有订阅 token，有存储权限的 App 都能读到。
 - 升级或卸载模块时都不删除这个目录，重装后订阅和 override 仍然保留。README 中说明如何手动删除。
 
 ## 7. 安全默认值
