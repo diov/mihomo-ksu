@@ -24,7 +24,7 @@
 `tools/sync-webroot.sh` 把 `webui/` 复制到已安装模块的 `webroot/`，保持安装器设置的属主 `root:root`、权限 644 与 SELinux 上下文 `u:object_r:system_file:s0`；加 `--module` 同时同步 `service.sh`、`action.sh`、`scripts/*.sh`（755）。之后在 WebUI 里刷新即可。
 
 - 这会让设备上的模块与已安装的 zip 不一致；发布前的验证要重新构建并安装 zip。
-- **当前状态（2026-10-05）**：设备上安装的是本地构建的 `v0.0.0-dev`（v0.2 第 1 步），模块脚本另用 `--module` 同步了第 2 步（日志轮转），已重启生效；WebUI 没有开发同步的改动。
+- **当前状态（2026-10-05）**：设备上安装的是本地构建的 `v0.0.0-dev`（v0.2 第 1 步），模块脚本另用 `--module` 同步了第 2 步（日志轮转），已重启生效；WebUI 开发同步到第 3 步（排除应用）。
 
 ## WebView 调试（在页面里执行 JS）
 
@@ -78,3 +78,4 @@
 - fake-ip 是否生效：`ping -c1 www.google.com` 解析到 `198.18.x.x`。
 - 私人 DNS：`settings get global private_dns_mode`（`null` 表示未设置，按自动模式）；实际模式看 `su -c "dumpsys dnsresolver"`。
 - 规则顺序：`GET /rules`；订阅节点数：`GET /providers/proxies`。
+- 以其他 uid 发请求（验证排除应用等按 uid 分流的功能）：`su -G 3003 <uid> -c 'curl ...'`。不加 inet 组（3003）连 DNS 都查不了；普通应用的 uid 在后台常被系统限制联网，连接超时，可改用 shell（uid 2000，包名 `com.android.shell`）。看是否经过 mihomo：用独特的域名请求后在 `log/mihomo.log` 中计数。
