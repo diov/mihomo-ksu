@@ -142,8 +142,27 @@ test('an override that is not a map is rejected', () => {
 });
 
 test('prepend-rules and append-rules must be lists', () => {
-  mergeError(() => merge(base(), { 'prepend-rules': 'DOMAIN,a.com,DIRECT' }), 'rules-not-array');
-  mergeError(() => merge(base(), { 'append-rules': { a: 1 } }), 'rules-not-array');
+  mergeError(() => merge(base(), { 'prepend-rules': 'DOMAIN,a.com,DIRECT' }), 'not-array');
+  mergeError(() => merge(base(), { 'append-rules': { a: 1 } }), 'not-array');
+});
+
+test('excluded packages add to the base list, base first and without duplicates', () => {
+  const b = { ...base(), tun: { ...base().tun, 'exclude-package': ['com.android.captiveportallogin'] } };
+  const out = merge(b, { tun: { 'exclude-package': ['com.tencent.mm', 'com.android.captiveportallogin', 'cmb.pb'] } });
+  assert.deepEqual(out.tun['exclude-package'], ['com.android.captiveportallogin', 'com.tencent.mm', 'cmb.pb']);
+  assert.equal(out.tun.device, 'Meta');
+});
+
+test('excluded packages work with only one side listing them', () => {
+  assert.deepEqual(merge(base(), { tun: { 'exclude-package': ['com.tencent.mm'] } }).tun['exclude-package'], ['com.tencent.mm']);
+  const b = { ...base(), tun: { ...base().tun, 'exclude-package': ['com.android.captiveportallogin'] } };
+  assert.deepEqual(merge(b, { tun: { enable: false } }).tun['exclude-package'], ['com.android.captiveportallogin']);
+  assert.deepEqual(merge(b, { tun: { 'exclude-package': [] } }).tun['exclude-package'], ['com.android.captiveportallogin']);
+});
+
+test('tun.exclude-package must be a list', () => {
+  mergeError(() => merge(base(), { tun: { 'exclude-package': 'com.tencent.mm' } }), 'not-array');
+  mergeError(() => merge(base(), { tun: { 'exclude-package': null } }), 'not-array');
 });
 
 test('merging leaves the base untouched for the next preview or save', () => {
@@ -153,6 +172,7 @@ test('merging leaves the base untouched for the next preview or save', () => {
     'x-provider-defaults': { 'health-check': { interval: 60 } },
     'proxy-providers': { airport: { url: 'https://example.com/sub' } },
     'prepend-rules': ['DOMAIN,a.com,DIRECT'],
+    tun: { 'exclude-package': ['com.tencent.mm'] },
   });
   assert.deepEqual(b, base());
 });

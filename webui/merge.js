@@ -78,7 +78,7 @@ export function merge(base, override) {
   const { 'prepend-rules': prepend = [], 'append-rules': append = [], ...plain } = override;
   for (const [key, value] of [['prepend-rules', prepend], ['append-rules', append]]) {
     if (!Array.isArray(value)) {
-      throw new MergeError('rules-not-array', { key }, `"${key}" must be a list`);
+      throw new MergeError('not-array', { key }, `"${key}" must be a list`);
     }
   }
 
@@ -88,6 +88,14 @@ export function merge(base, override) {
   }
   if (prepend.length > 0 || append.length > 0) {
     out.rules = insertRules(out.rules ?? [], prepend, append);
+  }
+  // Packages the module excludes in base.yaml stay excluded whatever the user lists.
+  if (isMap(plain.tun) && 'exclude-package' in plain.tun) {
+    const excluded = plain.tun['exclude-package'];
+    if (!Array.isArray(excluded)) {
+      throw new MergeError('not-array', { key: 'tun.exclude-package' }, '"tun.exclude-package" must be a list');
+    }
+    out.tun = { ...out.tun, 'exclude-package': [...new Set([...(base.tun?.['exclude-package'] ?? []), ...excluded])] };
   }
   return out;
 }

@@ -144,7 +144,7 @@ export default {
 
   'merge.root-not-map': 'override 的最外层必须是键值对（map）。',
   'merge.managed-field': '"{field}" 由模块管理，不能在 override 中修改。',
-  'merge.rules-not-array': '"{key}" 必须是列表。',
+  'merge.not-array': '"{key}" 必须是列表。',
   'merge.provider-name-slash': '订阅名称 "{name}" 不能包含 /。',
   'merge.provider-not-map': '订阅 "{name}" 下需要填写字段，至少要有 url。',
 };
