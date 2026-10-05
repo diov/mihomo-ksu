@@ -21,6 +21,7 @@ override 是一个 mihomo 配置片段，只写与 base 不同的部分。
 1. **深度合并**：除特殊键（`prepend-rules`、`append-rules`）外，override 的每个键按下面的规则合并到 base 上。`x-provider-defaults` 同样参与这一步，也就是说 override 可以修改订阅默认字段。
 2. **订阅补齐**：用第 1 步得到的 `x-provider-defaults`，补齐 `proxy-providers` 中每个条目缺失的字段。
 3. **规则插入**：在第 1 步得到的 `rules` 上处理 `prepend-rules` / `append-rules`，然后从结果中删除这两个键。
+4. **排除应用**：`tun.exclude-package` 取 base 与 override 的并集。
 
 ### 1. 深度合并
 
@@ -31,7 +32,7 @@ override 是一个 mihomo 配置片段，只写与 base 不同的部分。
 | 不存在 | 任意 | 取 override |
 | 任意 | 不存在 | 保留 base |
 
-- 数组一律整体替换，包括 `rules`、`proxy-groups`、`tun.dns-hijack`、`dns.fake-ip-filter` 等。要在 base 的数组上增减条目，只能写出完整的新数组。唯一的例外是规则，见第 3 步。
+- 数组一律整体替换，包括 `rules`、`proxy-groups`、`tun.dns-hijack`、`dns.fake-ip-filter` 等。要在 base 的数组上增减条目，只能写出完整的新数组。例外只有规则（第 3 步）和 `tun.exclude-package`（第 4 步）。
 - `null` 不做特殊处理，按标量替换；mihomo 把它当作未设置。
 - base 的代理组使用 `include-all`，新增的订阅会自动进入这些组，通常不需要改 `proxy-groups`。
 
@@ -53,6 +54,12 @@ override 是一个 mihomo 配置片段，只写与 base 不同的部分。
 - `append-rules`：插入到最后一条 `MATCH` 规则之前；`rules` 中没有 `MATCH` 时追加到末尾。
 - 两者都基于第 1 步的结果：如果 override 同时写了 `rules`（整体替换），先替换，再插入。
 - 两个键都必须是数组，否则报错。
+
+### 4. 排除应用
+
+- override 写了 `tun.exclude-package` 时，结果 = base 的列表在前、override 的列表在后，去掉重复项。
+- base 中只放模块运行必需的包名（例如 captive portal 登录页），override 无法去掉它们；用户的排除列表（WebUI "排除应用"）只写在 override 中，两者互不影响。
+- override 的 `tun.exclude-package` 必须是数组，否则报错。
 
 ## 模块管理的字段
 
