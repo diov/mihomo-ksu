@@ -14,6 +14,9 @@
 
 - `./build.sh` 生成 `dist/mihomo-ksu-v0.0.0-dev.zip`。作者的 Mac 直连 `release-assets.githubusercontent.com` 不稳定，失败时临时走本机代理：`https_proxy=http://127.0.0.1:6152 ./build.sh`（不改 `build.sh`）。
 - `adb push dist/*.zip /sdcard/Download/`，在管理器中安装后**重启**。WebUI（`webroot/`）和脚本在重启前不会更新。
+- 重启后要在手机上输入密码解锁，adb 才能用；脚本里用 `adb wait-for-device` 加轮询 `sys.boot_completed` 等待。
+- 验证 `customize.sh` 的输出时，可以不经管理器：`su -c '/data/adb/ksud module install <zip>'`，输出与管理器中相同（管理器调用的就是它），额外多出安装器 `unzip` 的 `inflating` 行。安装前在一个安装周期内再次安装时，"旧版本"显示的是上次待生效的版本：安装器会把新 `module.prop` 先拷进模块目录。
+- 模拟首次安装：先 `ctl.sh stop`，把数据目录与模块目录的 `module.prop` 临时改名，安装、检查后删除新建的数据目录、改回原名，再 `ctl.sh start`。
 - 同时只能有一个 Tun 代理模块在运行（decisions #2），旧的 `Clash` 模块已卸载。
 
 ## 开发时同步（不重装）
