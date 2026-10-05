@@ -28,6 +28,7 @@ export default {
   'status.restarting': '正在重启…',
 
   'unsaved': '未保存',
+  'edit.done': '完成',
   'duration.hours': '{n} 小时',
   'duration.minutes': '{n} 分钟',
   'duration.seconds': '{n} 秒',
@@ -60,7 +61,6 @@ export default {
   'subEdit.intervalHint': '其余字段（类型、健康检查、缓存路径）使用模板默认值',
   'subEdit.delete': '删除订阅',
   'subEdit.cancel': '取消',
-  'subEdit.done': '确定',
   'sub.name-required': '请填写名称',
   'sub.name-slash': '名称不能包含 /',
   'sub.name-taken': '已有同名的订阅',
@@ -79,7 +79,6 @@ export default {
   'rules.yamlOnlyToast': '这条规则表单无法编辑，请在"高级 → 编辑 override YAML"中修改',
   'rules.addTitle': '添加规则',
   'rules.editTitle': '编辑规则',
-  'rules.done': '完成',
   'rules.position': '位置',
   'rules.positionPrepend': '前置 · 最先匹配',
   'rules.positionAppend': '后置 · MATCH 之前',
