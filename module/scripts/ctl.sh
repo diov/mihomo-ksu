@@ -4,7 +4,6 @@
 
 BIN=$MODDIR/bin/mihomo
 PIDFILE=$DATA/mihomo.pid
-LOG=$DATA/log/mihomo.log
 # Must match tun.device in base.yaml.
 TUN=Meta
 
@@ -36,7 +35,8 @@ start() {
   fi
   mkdir -p "${LOG%/*}"
   # Via the environment rather than -secret: argv is visible to adb shell through ps.
-  CLASH_OVERRIDE_SECRET=$(cat "$DATA/secret") nohup "$BIN" -d "$DATA" >"$LOG" 2>&1 &
+  # Append so that logrotate.sh can truncate the log under the running core.
+  CLASH_OVERRIDE_SECRET=$(cat "$DATA/secret") nohup "$BIN" -d "$DATA" >>"$LOG" 2>&1 &
   echo $! >"$PIDFILE"
   sleep 1
   if ! running; then

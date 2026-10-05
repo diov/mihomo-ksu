@@ -15,4 +15,5 @@ if "$MODDIR/scripts/template.sh" changed; then
 fi
 
 "$MODDIR/scripts/ctl.sh" start
+"$MODDIR/scripts/logrotate.sh" >/dev/null 2>&1 &
 inotifyd "$MODDIR/scripts/inotify.sh" "$MODDIR:nd" >/dev/null 2>&1 &
