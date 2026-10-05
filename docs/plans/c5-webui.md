@@ -92,7 +92,7 @@
 ### C5.5 `feat(webui): subscription editor`
 - 设计稿"订阅"卡片与"订阅编辑"全屏编辑页：名称、链接、更新间隔（模板默认 / 1 / 12 / 24 小时）；增删改。
 - 卡片：每行显示名称、链接与非默认的更新间隔。链接只显示主机名和路径，查询参数（通常含 token）用"…"代替。与已保存版本不同的订阅标"未保存"。
-- 编辑页（全屏视图，与 YAML 编辑页同一套切换与返回键逻辑；顶栏为关闭、标题、"确定"，"删除订阅"在表单末尾）：
+- 编辑页（全屏视图，与 YAML 编辑页同一套切换与返回键逻辑；顶栏为关闭、标题、"完成"，"删除订阅"在表单末尾）：
   - 校验：名称必填、不含 `/`、不与其他订阅重名；链接必须以 `http://` 或 `https://` 开头。不通过时在字段下方提示，不写入草稿。
   - "模板默认"显示 `x-provider-defaults` 的实际间隔；条目原有的间隔不在选项中时，额外列出它，避免打开再关闭就被改掉。
   - 只改名称、`url`、`interval` 三项，条目里的其他字段（如手写的 `health-check`、`path`）原样保留；改名时保持订阅的先后顺序。
@@ -140,12 +140,12 @@
 
 1. **"打开面板"在系统浏览器中打开**：`am start -a android.intent.action.VIEW -d <URL>`。登录状态保存在浏览器中，之后直接打开 `/ui` 即可。已知代价：URL（含 secret）会短暂出现在 `am` 进程的命令行里。
 2. **界面语言**：先提供中文，但从一开始就支持多语言。文案集中在 `webui/i18n/<locale>.js`，每个文件导出一个 key → 文案的对象；页面只通过 `t(key)` 取文案，不在 HTML/JS 中写死文字。语言按 `navigator.language` 选择，没有对应文件时回退到中文。只有一种语言时不显示语言切换入口。
-3. **界面设计**：已确认设计稿（https://claude.ai/artifact/PXopVDG5kbikpYCmjBtiER，仅本人可见）：主页、模板更新与异常、订阅编辑、编辑规则、YAML 编辑、保存失败。
+3. **界面设计**：已确认设计稿（https://claude.ai/artifact/PXopVDG5kbikpYCmjBtiER，仅本人可见）：主页、模板更新与异常、订阅编辑、编辑规则、YAML 编辑、保存失败；v0.2 加入排除应用（主页卡片、选择页）。
    - 单页滚动，区块依次为：顶部栏、模板更新横幅（按需）、运行状态、订阅、自定义规则、高级（YAML 编辑、预览）。
    - 修改先累积为"未保存的更改"，通过底部浮动条统一"保存并应用"；保存一次要经过 `mihomo -t` 和热重载，不逐项保存。
    - 状态卡片正常时只显示"运行中"，有异常才展开具体问题；保留"重启"按钮。
    - 规则只提供结构化表单，参考 Surge 的列表与编辑方式。
    - 订阅只开放来源（订阅链接 / 本地文件）、名称、链接或文件、更新间隔，其余字段用模板默认值。
-   - 带文本输入的表单（订阅、规则）用全屏编辑页而不是底部面板：KernelSU Next 在 Activity 层消费了窗口 insets，弹出输入法时 WebView 不缩小，页面拿不到键盘高度，底部面板会被键盘盖住 [已验证 via adb：键盘弹出后 `innerHeight` 与 `visualViewport.height` 不变；VirtualKeyboard API `overlaysContent` 后 `boundingRect` 仍为 0；`interactive-widget=resizes-content` 无效]。全屏页的字段从顶部排起，"确定"在顶栏，不被键盘遮挡。
+   - 带文本输入的表单（订阅、规则）用全屏编辑页而不是底部面板：KernelSU Next 在 Activity 层消费了窗口 insets，弹出输入法时 WebView 不缩小，页面拿不到键盘高度，底部面板会被键盘盖住 [已验证 via adb：键盘弹出后 `innerHeight` 与 `visualViewport.height` 不变；VirtualKeyboard API `overlaysContent` 后 `boundingRect` 仍为 0；`interactive-widget=resizes-content` 无效]。全屏页的字段从顶部排起，"完成"在顶栏，不被键盘遮挡。
    - 提示弹窗（保存失败）使用原生 `<dialog>`，下拉使用原生 `<select>`，不引入组件库。
    - 不做节点列表、测延迟、手动更新订阅、流量统计，这些由面板负责（decisions #9）。
