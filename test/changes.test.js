@@ -55,3 +55,11 @@ test('a newly picked file counts once unless its subscription already changed', 
   assert.equal(countChanges(saved, renamed, ['mine']), 2);
   assert.equal(countChanges(null, { 'proxy-providers': { local: { type: 'file' } } }, ['local']), 1);
 });
+
+test('each added or removed excluded app counts once, other tun changes once more', () => {
+  const saved = { tun: { 'exclude-package': ['com.tencent.mm', 'cmb.pb'] } };
+  assert.equal(countChanges(saved, { tun: { 'exclude-package': ['cmb.pb', 'com.tencent.mm'] } }), 0);
+  assert.equal(countChanges(saved, { tun: { 'exclude-package': ['cmb.pb', 'a.b', 'c.d'] } }), 3);
+  assert.equal(countChanges(saved, { tun: { 'exclude-package': ['com.tencent.mm', 'cmb.pb'], enable: false } }), 1);
+  assert.equal(countChanges(null, saved), 2);
+});

@@ -5,6 +5,7 @@ import { loadDraft } from './draft.js';
 import { initEditor } from './editor.js';
 import { initSubscriptions } from './subscriptions-card.js';
 import { initRules } from './rules-card.js';
+import { initApps } from './apps-card.js';
 import { initBanner, refreshBanner } from './banner.js';
 
 async function renderVersions() {
@@ -26,4 +27,5 @@ initEditor(() => Promise.all([refreshStatus(), renderVersions(), refreshBanner()
 initBanner();
 initSubscriptions();
 initRules();
+initApps();
 loadDraft();

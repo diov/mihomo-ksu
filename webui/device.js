@@ -1,5 +1,5 @@
 // The only place that touches the device: every call runs in KSU's root shell.
-import { exec } from './vendor/kernelsu.js';
+import { exec, getPackagesInfo, listPackages } from './vendor/kernelsu.js';
 
 export { toast } from './vendor/kernelsu.js';
 
@@ -80,6 +80,23 @@ export async function templateChanged() {
 export async function logTail(lines) {
   return sh(`tail -n ${Number(lines)} ${DATA}/log/mihomo.log`);
 }
+
+// Installed packages of type 'user' or 'system', from the manager's cached app list.
+export const installedPackages = (type) => listPackages(type);
+
+// Package name → { label, system }, or null for a package that is not installed. A label equal
+// to the package name means the app has none (common among system packages).
+export function packageInfo(packages) {
+  const out = new Map();
+  for (const info of getPackagesInfo(packages)) {
+    const label = info.appLabel === info.packageName ? '' : info.appLabel;
+    out.set(info.packageName, info.error ? null : { label, system: info.isSystem === true });
+  }
+  return out;
+}
+
+// The manager serves app icons at this address (KernelSU, KernelSU Next and APatch alike).
+export const iconUrl = (pkg) => `ksu://icon/${encodeURIComponent(pkg)}`;
 
 // Resolves to the exit code: ctl.sh status exits 0 only while mihomo is running.
 export async function ctl(action) {

@@ -35,6 +35,19 @@ function countRules(before, after) {
   return deepEqual(before, after) ? 0 : 1;
 }
 
+// Each added or removed excluded app counts once; any other tun change counts once more.
+function countTun(before, after) {
+  const { 'exclude-package': a = [], ...restBefore } = before;
+  const { 'exclude-package': b = [], ...restAfter } = after;
+  let count = deepEqual(restBefore, restAfter) ? 0 : 1;
+  if (Array.isArray(a) && Array.isArray(b)) {
+    count += a.filter((p) => !b.includes(p)).length + b.filter((p) => !a.includes(p)).length;
+  } else if (!deepEqual(a, b)) {
+    count += 1;
+  }
+  return count;
+}
+
 const RULE_KEYS = new Set(['prepend-rules', 'append-rules']);
 
 // files: subscriptions with a newly picked file; one whose entry is otherwise unchanged counts once.
@@ -49,6 +62,8 @@ export function countChanges(saved, draft, files = []) {
     const b = after[key];
     if (key === 'proxy-providers' && (a == null || isMap(a)) && (b == null || isMap(b))) {
       count += countProviders(a ?? {}, b ?? {});
+    } else if (key === 'tun' && (a == null || isMap(a)) && (b == null || isMap(b))) {
+      count += countTun(a ?? {}, b ?? {});
     } else if (RULE_KEYS.has(key) && (a == null || Array.isArray(a)) && (b == null || Array.isArray(b))) {
       count += countRules(a ?? [], b ?? []);
     } else if (!deepEqual(a, b)) {

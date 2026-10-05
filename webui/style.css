@@ -884,3 +884,152 @@ body.has-savebar .content {
   font-size: 13px;
   word-break: break-all;
 }
+
+/* Excluded apps: card rows and the picker. */
+.app-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 60px;
+  padding: var(--space-2) 0;
+  box-sizing: border-box;
+  border-bottom: 1px solid var(--divider);
+}
+
+.list > .app-row:last-child {
+  border-bottom: 0;
+}
+
+label.app-row {
+  cursor: pointer;
+}
+
+.app-icon {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+}
+
+.app-icon-none {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--divider);
+  color: var(--text-muted);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.app-text {
+  gap: 2px;
+}
+
+.app-name {
+  overflow: hidden;
+  font-size: 15px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-missing {
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.app-pkg {
+  overflow: hidden;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.badge-neutral {
+  background: var(--divider);
+  color: var(--text-muted);
+}
+
+.checkbox {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  margin: 0 2px 0 0;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
+.apps-body {
+  gap: var(--space-3);
+}
+
+.search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 0 var(--space-4);
+  border: 1px solid var(--outline);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--text-muted);
+}
+
+.search input {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  outline: none;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 15px;
+}
+
+.apps-filter {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* 36px tall as drawn; ::after widens the touch target to 44px. */
+.chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--outline);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.chip::after {
+  content: "";
+  position: absolute;
+  inset: -4px 0;
+}
+
+.chip svg {
+  display: none;
+}
+
+.chip[aria-pressed="true"] {
+  border-color: var(--primary-container);
+  background: var(--primary-container);
+  color: var(--on-primary-container);
+}
+
+.chip[aria-pressed="true"] svg {
+  display: block;
+}
