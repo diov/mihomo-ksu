@@ -160,9 +160,17 @@ test('excluded packages work with only one side listing them', () => {
   assert.deepEqual(merge(b, { tun: { 'exclude-package': [] } }).tun['exclude-package'], ['com.android.captiveportallogin']);
 });
 
-test('tun.exclude-package must be a list', () => {
+test('excluded uids are the union of base and override', () => {
+  const b = { ...base(), tun: { ...base().tun, 'exclude-uid': [1073] } };
+  assert.deepEqual(merge(b, { tun: { 'exclude-uid': [10057, 1073] } }).tun['exclude-uid'], [1073, 10057]);
+  assert.deepEqual(merge(b, { tun: { 'exclude-uid': [] } }).tun['exclude-uid'], [1073]);
+  assert.deepEqual(merge(b, { tun: { 'exclude-package': ['com.tencent.mm'] } }).tun['exclude-uid'], [1073]);
+});
+
+test('tun exclusion lists must be lists', () => {
   mergeError(() => merge(base(), { tun: { 'exclude-package': 'com.tencent.mm' } }), 'not-array');
   mergeError(() => merge(base(), { tun: { 'exclude-package': null } }), 'not-array');
+  mergeError(() => merge(base(), { tun: { 'exclude-uid': 10057 } }), 'not-array');
 });
 
 test('merging leaves the base untouched for the next preview or save', () => {

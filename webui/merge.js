@@ -89,13 +89,14 @@ export function merge(base, override) {
   if (prepend.length > 0 || append.length > 0) {
     out.rules = insertRules(out.rules ?? [], prepend, append);
   }
-  // Packages the module excludes in base.yaml stay excluded whatever the user lists.
-  if (isMap(plain.tun) && 'exclude-package' in plain.tun) {
-    const excluded = plain.tun['exclude-package'];
+  // What the module excludes in base.yaml stays excluded whatever the user lists.
+  for (const key of ['exclude-package', 'exclude-uid']) {
+    if (!isMap(plain.tun) || !(key in plain.tun)) continue;
+    const excluded = plain.tun[key];
     if (!Array.isArray(excluded)) {
-      throw new MergeError('not-array', { key: 'tun.exclude-package' }, '"tun.exclude-package" must be a list');
+      throw new MergeError('not-array', { key: `tun.${key}` }, `"tun.${key}" must be a list`);
     }
-    out.tun = { ...out.tun, 'exclude-package': [...new Set([...(base.tun?.['exclude-package'] ?? []), ...excluded])] };
+    out.tun = { ...out.tun, [key]: [...new Set([...(base.tun?.[key] ?? []), ...excluded])] };
   }
   return out;
 }
