@@ -27,6 +27,13 @@ tun:
   auto-route: true
   auto-detect-interface: true
   strict-route: true
+  # Captive portals (decisions #5): network_stack's probes, with their DNS, and the
+  # login page reach the network directly; through the proxy they fail before sign-in.
+  exclude-uid:
+    - 1073
+  exclude-package:
+    - com.android.captiveportallogin
+    - com.google.android.captiveportallogin
   # No route-exclude-address for LAN ranges: on Android sing-tun does not route
   # port 53 back into the tun, so DNS to a LAN resolver (the Wi-Fi router) would
   # bypass dns-hijack and fake-ip. LAN traffic goes DIRECT via GEOIP,private.
