@@ -107,6 +107,7 @@ KernelSU / APatch 模块：开机后台运行 mihomo，以 Tun 模式做全局�
 - 二进制和第三方产物不进 git，由 `build.sh` 在构建时下载；哪些固定版本、哪些取最新版见 #10。
 - 版本号从 git tag 推导：tag `vX.Y.Z` 对应 `version=vX.Y.Z`，`versionCode = X*10000 + Y*100 + Z`（约束：Y、Z < 100）。
 - `updateJson` 指向 `https://github.com/<owner>/mihomo-ksu/releases/latest/download/update.json`，由 release workflow 生成并作为 release asset 上传，不需要向 main 分支提交。
+  - 开发版（无 tag，`version=v0.0.0-dev`、`versionCode=0`）的 `module.prop` 不带 `updateJson`：否则管理器总会提示更新，点了就装回正式版，覆盖开发中的模块（2026-10-12 发生过）。
 - 订阅 token 等私人配置只保存在设备上，不进入仓库。
 
 ## 9. 面板（metacubexd）与模块 WebUI 职责分离
