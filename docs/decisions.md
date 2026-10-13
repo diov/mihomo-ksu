@@ -60,18 +60,28 @@ KernelSU / APatch 模块：开机后台运行 mihomo，以 Tun 模式做全局�
 
 不在 v0.1 范围，先完成配置管理；v0.2 排在最后（见 `plans/v0.2.md` 第 4 步）。以下分析是 spike 的起点。
 
-根因推断如下（**尚未在真机上验证**）：
+根因推断如下（第 1、2 条已在真机上验证，见下方"spike 结论"；第 3、4 条待真实 portal 确认）：
 
 1. NetworkMonitor 发出的探测请求被 Tun 截获（mihomo 的 ip rule 优先级更高）。
 2. 探测域名经 fake-ip 解析后命中规则，被送去走代理。
 3. 认证之前，代理节点和加密 DNS 都不可达，探测超时。
 4. 结果系统判定为"无互联网"，而不是"需要登录"，登录页因此不弹出。
 
+**spike 结论**（2026-10-13，作者设备，见 `plans/v0.2.md` 4.1）：
+
+- 探测由 `com.android.networkstack.process` 发出，uid 1073。
+- 探测地址由 ROM 决定，不是 AOSP 默认值：该设备是 `http(s)://www.google.cn/generate_204` 与 OPPO 的 `conn-service-cn-0{4,5}.allawntech.com/generate204`。`settings put global captive_portal_http(s)_url` 不生效，`cmd network_stack` 也没有覆盖地址的命令。因此不按域名处理探测（各厂商不同）。
+- 现状：探测的 DNS 得到 fake-ip（`198.18.x.x`），HTTP/HTTPS 经 mihomo 按规则转发。开机时 mihomo 尚未启动的那一轮探测失败，随后一轮成功。
+- 加上 `tun.exclude-uid: [1073]` 后：sing-tun 在优先级 9000 加 `uidrange 1073-1073 goto 9010`，探测的 DNS 得到真实 IP（netd 代发的查询同样被排除），HTTP/HTTPS 直接成功，mihomo 日志中不再出现探测连接；其他应用照常经过 Tun。
+- 该设备连上 Wi-Fi 后移动数据仍保持在线且 `VALIDATED`，默认网络为 Wi-Fi。
+- 登录应用为 `com.google.android.captiveportallogin`（uid 10103）。
+- 未完成：在家模拟 portal。该 ROM 无法改探测地址，用 iptables 模拟较复杂，改为在真实 portal 上直接验证（4.4）。关闭 Tun 后多久重新探测、portal 状态下默认网络的切换，也在那时观察。
+
 
 - **A（配置层，候选）**：
   - 把 `com.android.captiveportallogin` / `com.google.android.captiveportallogin` 加入 `exclude-package`（meta-docs 示例即为此包名）。
   - 探测域名改为直连，并使用系统 DNS 解析。
-  - 或者用 `tun.exclude-uid` 排除探测进程，让探测完全不进 Tun。探测由 NetworkStack 发出，uid 为 `network_stack`（1073）[已验证 via AOSP `android_filesystem_config.h` `AID_NETWORK_STACK`]；sing-tun 先把 `exclude-package` 换算成 uid，再与 `exclude-uid` 一起生成 ip rule，所以 `exclude-uid` 在 Android 上同样有效 [已验证 via MetaCubeX/sing-tun `tun_rules.go`]。待 spike 确认：设备上的探测是否确实以 1073 发出，它的 DNS 查询（由 netd 代发）是否也被排除。
+  - 或者用 `tun.exclude-uid` 排除探测进程，让探测完全不进 Tun。探测由 NetworkStack 发出，uid 为 `network_stack`（1073）[已验证 via AOSP `android_filesystem_config.h` `AID_NETWORK_STACK`]；sing-tun 先把 `exclude-package` 换算成 uid，再与 `exclude-uid` 一起生成 ip rule，所以 `exclude-uid` 在 Android 上同样有效 [已验证 via MetaCubeX/sing-tun `tun_rules.go`]。已在真机确认：探测以 1073 发出，它的 DNS 查询也被排除（见上方"spike 结论"）。
 - **B（watcher，候选）**：
   - 设想：网络未通过系统验证时，通过 `PATCH /configs` 关闭 tun，验证通过后再开启。[已验证 via mihomo `hub/route/configs.go`：PATCH 的 schema 中包含 `tun` 字段]
   - 风险：手机上 Wi-Fi 和移动数据经常同时在线，"某个网络未验证"并不能推出"应该暂停代理"，误判会让流量绕过代理。应先在真机上验证 A 的效果，以及多网络并存时的系统行为，再决定是否引入。
