@@ -82,6 +82,11 @@ tar -xzf "$CACHE/js-yaml-$JS_YAML_VERSION.tgz" -O package/dist/browser/js-yaml.e
 tar -xzf "$CACHE/kernelsu-$KERNELSU_VERSION.tgz" -O package/index.js >"$STAGE/webroot/vendor/kernelsu.js"
 sed -e "s/^version=.*/version=$version/" -e "s/^versionCode=.*/versionCode=$version_code/" \
   module/module.prop >"$STAGE/module.prop"
+if [ "$version_code" -eq 0 ]; then
+  # Otherwise the manager offers the release as an update over a dev build (decisions #8).
+  sed -i.orig '/^updateJson=/d' "$STAGE/module.prop"
+  rm "$STAGE/module.prop.orig"
+fi
 gunzip -c "$CACHE/latest/mihomo.gz" >"$STAGE/bin/mihomo"
 unzip -q "$CACHE/latest/metacubexd.zip" -d "$STAGE/assets"
 mv "$STAGE/assets/metacubexd-gh-pages" "$STAGE/assets/ui"
