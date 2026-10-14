@@ -58,9 +58,9 @@ KernelSU / APatch 模块：开机后台运行 mihomo，以 Tun 模式做全局�
 
 ## 5. Captive portal：v0.2 最后一步
 
-不在 v0.1 范围，先完成配置管理；v0.2 排在最后（见 `plans/v0.2.md` 第 4 步）。以下分析是 spike 的起点。
+不在 v0.1 范围，先完成配置管理；v0.2 排在最后（见 `plans/v0.2.md` 第 4 步）。**结论：采用方案 A（`exclude-uid` 排除探测进程、`exclude-package` 排除登录应用），不引入方案 B。**
 
-根因推断如下（第 1、2 条已在真机上验证，见下方"spike 结论"；第 3、4 条待真实 portal 确认）：
+根因推断如下（第 1、2 条已在真机上验证，见下方"spike 结论"；第 3、4 条没有单独验证，采用方案 A 后真实 portal 上问题不再出现）：
 
 1. NetworkMonitor 发出的探测请求被 Tun 截获（mihomo 的 ip rule 优先级更高）。
 2. 探测域名经 fake-ip 解析后命中规则，被送去走代理。
@@ -75,17 +75,18 @@ KernelSU / APatch 模块：开机后台运行 mihomo，以 Tun 模式做全局�
 - 加上 `tun.exclude-uid: [1073]` 后：sing-tun 在优先级 9000 加 `uidrange 1073-1073 goto 9010`，探测的 DNS 得到真实 IP（netd 代发的查询同样被排除），HTTP/HTTPS 直接成功，mihomo 日志中不再出现探测连接；其他应用照常经过 Tun。
 - 该设备连上 Wi-Fi 后移动数据仍保持在线且 `VALIDATED`，默认网络为 Wi-Fi。
 - 登录应用为 `com.google.android.captiveportallogin`（uid 10103）。
-- 未完成：在家模拟 portal。该 ROM 无法改探测地址，用 iptables 模拟较复杂，改为在真实 portal 上直接验证（4.4）。关闭 Tun 后多久重新探测、portal 状态下默认网络的切换，也在那时观察。
+- 在家模拟 portal 没有做：该 ROM 无法改探测地址，用 iptables 模拟较复杂，改为直接在真实 portal 上验证（4.4）。
 
+**真实 portal 验收**（2026-10-14 记录，咖啡店，方案 A 已生效，见 `plans/v0.2.md` 4.4）：连上 Wi-Fi 后自动弹出"登录网络"通知，登录页能打开并完成认证；认证后流量走代理。依据为现场观察，没有用 adb 查看 Validation logs。
 
-- **A（配置层，候选）**：
+- **A（配置层，采用）**：
   - 把 `com.android.captiveportallogin` / `com.google.android.captiveportallogin` 加入 `exclude-package`（meta-docs 示例即为此包名）。
   - 探测域名改为直连，并使用系统 DNS 解析。
   - 或者用 `tun.exclude-uid` 排除探测进程，让探测完全不进 Tun。探测由 NetworkStack 发出，uid 为 `network_stack`（1073）[已验证 via AOSP `android_filesystem_config.h` `AID_NETWORK_STACK`]；sing-tun 先把 `exclude-package` 换算成 uid，再与 `exclude-uid` 一起生成 ip rule，所以 `exclude-uid` 在 Android 上同样有效 [已验证 via MetaCubeX/sing-tun `tun_rules.go`]。已在真机确认：探测以 1073 发出，它的 DNS 查询也被排除（见上方"spike 结论"）。
-- **B（watcher，候选）**：
+- **B（watcher，不采用）**：
   - 设想：网络未通过系统验证时，通过 `PATCH /configs` 关闭 tun，验证通过后再开启。[已验证 via mihomo `hub/route/configs.go`：PATCH 的 schema 中包含 `tun` 字段]
-  - 风险：手机上 Wi-Fi 和移动数据经常同时在线，"某个网络未验证"并不能推出"应该暂停代理"，误判会让流量绕过代理。应先在真机上验证 A 的效果，以及多网络并存时的系统行为，再决定是否引入。
-- **在家测试**：用 `settings put global captive_portal_http_url` / `captive_portal_https_url` 把探测地址指向 PC 上一个返回 302 的服务。这种方式模拟不了"认证前只能用 DHCP DNS"的条件，最终仍需在真实 portal 上验证一次。
+  - 风险：手机上 Wi-Fi 和移动数据经常同时在线，"某个网络未验证"并不能推出"应该暂停代理"，误判会让流量绕过代理。真实 portal 上 A 已经足够，不引入。
+- **在家测试**：用 `settings put global captive_portal_http_url` / `captive_portal_https_url` 把探测地址指向 PC 上一个返回 302 的服务。作者设备的 ROM 不认这两个设置（见"spike 结论"）；这种方式也模拟不了"认证前只能用 DHCP DNS"的条件。
 
 ## 6. 运行时数据目录：`/data/adb/mihomo-ksu/`
 
