@@ -1,6 +1,6 @@
 # 真机验证
 
-脚本和 WebUI 的改动都要在真机上验证（CLAUDE.md "技术栈"）。本文记录做法和已踩过的坑；结论来自作者的设备：OnePlus CPH2723（Android 16，arm64），管理器 KernelSU Next（`com.rifsxd.ksunext`），WebView Chrome 153。
+脚本和 WebUI 的改动都要在真机上验证（AGENTS.md "技术栈"）。本文记录做法和已踩过的坑；结论来自作者的设备：OnePlus CPH2723（Android 16，arm64），管理器 KernelSU Next（`com.rifsxd.ksunext`），WebView Chrome 153。
 
 ## 隐私（先读）
 

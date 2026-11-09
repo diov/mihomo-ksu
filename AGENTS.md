@@ -1,4 +1,4 @@
-# CLAUDE.md（项目级）
+# AGENTS.md（项目级）
 
 KernelSU / APatch 模块：开机以 Tun 模式运行 mihomo，提供模块 WebUI 管理配置。Captive portal 处理排在 v0.2 最后（见 `docs/decisions.md` #5）。
 
