@@ -14,9 +14,17 @@ function base() {
       interval: 21600,
       'health-check': { enable: true, url: 'https://www.gstatic.com/generate_204', interval: 900, lazy: true },
     },
+    'proxy-groups': [
+      { name: 'Proxy', type: 'select', 'include-all': true },
+      { name: 'HK', type: 'select', 'include-all': true, filter: '(?i)hk' },
+      { name: 'Final', type: 'select', proxies: ['Proxy', 'DIRECT'] },
+    ],
     rules: ['GEOSITE,private,DIRECT', 'GEOSITE,cn,DIRECT', 'MATCH,Final'],
   };
 }
+
+const names = (config) => config['proxy-groups'].map((g) => g.name);
+const group = (name) => ({ name, type: 'select', proxies: ['Proxy', 'DIRECT'] });
 
 function mergeError(fn, code) {
   assert.throws(fn, (err) => err instanceof MergeError && err.code === code);
@@ -146,6 +154,34 @@ test('prepend-rules and append-rules must be lists', () => {
   mergeError(() => merge(base(), { 'append-rules': { a: 1 } }), 'not-array');
 });
 
+test('append-proxy-groups go after the base groups, in their own order', () => {
+  const out = merge(base(), { 'append-proxy-groups': [group('Google'), group('AI')] });
+  assert.deepEqual(names(out), ['Proxy', 'HK', 'Final', 'Google', 'AI']);
+  assert.deepEqual(out['proxy-groups'][3], group('Google'));
+});
+
+test('an overridden proxy-groups list is replaced first, then groups are appended', () => {
+  const out = merge(base(), { 'proxy-groups': [group('Proxy'), group('Final')], 'append-proxy-groups': [group('AI')] });
+  assert.deepEqual(names(out), ['Proxy', 'Final', 'AI']);
+});
+
+test('appended groups become the whole list when there is none', () => {
+  const { 'proxy-groups': _, ...noGroups } = base();
+  assert.deepEqual(names(merge(noGroups, { 'append-proxy-groups': [group('AI')] })), ['AI']);
+  assert.deepEqual(names(merge(base(), { 'proxy-groups': null, 'append-proxy-groups': [group('AI')] })), ['AI']);
+});
+
+test('an empty append-proxy-groups changes nothing and does not appear in the result', () => {
+  const out = merge(base(), { 'append-proxy-groups': [] });
+  assert.deepEqual(out, base());
+  assert.equal('append-proxy-groups' in merge(base(), { 'append-proxy-groups': [group('AI')] }), false);
+});
+
+test('append-proxy-groups and the list it extends must be lists', () => {
+  mergeError(() => merge(base(), { 'append-proxy-groups': group('AI') }), 'not-array');
+  mergeError(() => merge(base(), { 'proxy-groups': { Proxy: {} }, 'append-proxy-groups': [group('AI')] }), 'not-array');
+});
+
 test('excluded packages add to the base list, base first and without duplicates', () => {
   const b = { ...base(), tun: { ...base().tun, 'exclude-package': ['com.android.captiveportallogin'] } };
   const out = merge(b, { tun: { 'exclude-package': ['com.tencent.mm', 'com.android.captiveportallogin', 'cmb.pb'] } });
@@ -180,7 +216,15 @@ test('merging leaves the base untouched for the next preview or save', () => {
     'x-provider-defaults': { 'health-check': { interval: 60 } },
     'proxy-providers': { airport: { url: 'https://example.com/sub' } },
     'prepend-rules': ['DOMAIN,a.com,DIRECT'],
+    'append-proxy-groups': [group('AI')],
     tun: { 'exclude-package': ['com.tencent.mm'] },
   });
   assert.deepEqual(b, base());
+});
+
+test('merging the same base twice appends the groups once each time', () => {
+  const b = base();
+  const override = { 'append-proxy-groups': [group('AI')] };
+  merge(b, override);
+  assert.deepEqual(names(merge(b, override)), ['Proxy', 'HK', 'Final', 'AI']);
 });

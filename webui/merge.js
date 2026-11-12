@@ -75,8 +75,13 @@ export function merge(base, override) {
     }
   }
 
-  const { 'prepend-rules': prepend = [], 'append-rules': append = [], ...plain } = override;
-  for (const [key, value] of [['prepend-rules', prepend], ['append-rules', append]]) {
+  const {
+    'prepend-rules': prepend = [],
+    'append-rules': append = [],
+    'append-proxy-groups': appendGroups = [],
+    ...plain
+  } = override;
+  for (const [key, value] of [['prepend-rules', prepend], ['append-rules', append], ['append-proxy-groups', appendGroups]]) {
     if (!Array.isArray(value)) {
       throw new MergeError('not-array', { key }, `"${key}" must be a list`);
     }
@@ -88,6 +93,14 @@ export function merge(base, override) {
   }
   if (prepend.length > 0 || append.length > 0) {
     out.rules = insertRules(out.rules ?? [], prepend, append);
+  }
+  if (appendGroups.length > 0) {
+    const groups = out['proxy-groups'] ?? [];
+    if (!Array.isArray(groups)) {
+      throw new MergeError('not-array', { key: 'proxy-groups' }, '"proxy-groups" must be a list');
+    }
+    // A new list: the base's own list is shared with every later merge.
+    out['proxy-groups'] = [...groups, ...appendGroups];
   }
   // What the module excludes in base.yaml stays excluded whatever the user lists.
   for (const key of ['exclude-package', 'exclude-uid']) {

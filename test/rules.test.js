@@ -1,5 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { merge } from '../webui/merge.js';
 import { changedRules, formatRule, listRules, parseRule, policyOptions, removeRule, saveRule, validateRule } from '../webui/rules.js';
 
 const override = () => ({
@@ -93,4 +94,9 @@ test('a duplicated rule counts as unsaved for the extra copy', () => {
 test('policies are the proxy group names followed by DIRECT and REJECT', () => {
   assert.deepEqual(policyOptions({ 'proxy-groups': [{ name: 'Proxy' }, { name: 'HK' }, { name: 'DIRECT' }] }), ['Proxy', 'HK', 'DIRECT', 'REJECT']);
   assert.deepEqual(policyOptions(null), ['DIRECT', 'REJECT']);
+});
+
+test('groups appended in the override can be picked as a rule policy', () => {
+  const config = merge({ 'proxy-groups': [{ name: 'Proxy' }] }, { 'append-proxy-groups': [{ name: 'AI', type: 'select', proxies: ['Proxy'] }] });
+  assert.deepEqual(policyOptions(config), ['Proxy', 'AI', 'DIRECT', 'REJECT']);
 });
