@@ -36,7 +36,7 @@ export default {
   'subs.title': '订阅',
   'subs.count': '{count} 个',
   'subs.add': '添加订阅',
-  'subs.empty': '还没有订阅。添加后，节点会自动出现在各地区和服务分组中。',
+  'subs.empty': '还没有订阅。添加后，节点会自动出现在各地区分组中。',
   'subs.unavailable': 'override.yaml 目前无法解析，或 proxy-providers 不是键值对。请先在"高级 → 编辑 override YAML"中修正。',
   'subs.every': '每 {duration}更新',
   'subs.localFile': '本地文件 · 不自动更新',
