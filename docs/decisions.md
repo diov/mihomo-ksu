@@ -44,6 +44,8 @@ KernelSU / APatch 模块：开机后台运行 mihomo，以 Tun 模式做全局�
   - 原因：base 和 override 是两个文件，YAML 锚点（`&pp` / `<<: *pp`）无法跨文件引用，所以改由合并步骤实现同样的复用。
   - 否决的备选：在 override 中写完整的 provider 字段。每条订阅要写 5、6 个字段，WebUI 表单要么暴露所有字段，要么在界面层再实现一遍补齐。
   - `x-provider-defaults` 会原样保留在最终的 `config.yaml` 中；mihomo 会忽略不认识的顶层键。
+- **用户追加代理组**：override 用特殊键 `append-proxy-groups` 把自己的组追加到 base 的组之后（规范见 `override.md` 第 3 步）。原因同上：数组整体替换时，加一个组要抄全部地区组及其 `filter` 正则，base 的 `x-region` 锚点也不能跨文件引用。
+  - 参考 Clash Verge Rev 对 `proxy-groups` 的 prepend / append / delete 序列 [已验证 via clash-verge-rev `src-tauri/src/enhance/seq.rs`，2026-11-13]；只取 append，prepend / delete 出现实际需求再加。
 - **模板变更的处理**：合并只在 WebUI 中进行，开机脚本不做合并。否决了"打包 yq、让 shell 在开机时合并"的方案，因为要多打包一个约 12MB 的二进制，复杂度不值得。具体做法：
   - 每次生成 `config.yaml` 时，同时记录所用 `base.yaml` 的 sha256。
   - 开机时比较模块内 `base.yaml` 的 hash 与记录值。如果不一致，仍用旧的 `config.yaml` 启动，并在 `module.prop` 的 `description` 前加上"模板已更新，请打开 WebUI 应用"的提示前缀；WebUI 打开时同样显示提示，并提供"应用"按钮，应用后去掉前缀。模块升级会换上新的 `module.prop`，前缀不会残留到下个版本。
@@ -156,8 +158,13 @@ KernelSU / APatch 模块：开机后台运行 mihomo，以 Tun 模式做全局�
 - **订阅中的规则不使用**：mihomo 解析 proxy-provider 时只读 `proxies` 字段，订阅里的 `rules`、`proxy-groups` 等被忽略 [已验证 via mihomo `adapter/provider/provider.go` `ProxySchema`]。
   - 否决的备选：保存时把订阅规则抄进配置（映射策略名）。只是保存时的快照，订阅更新后不跟随；以作者的订阅为例有 4280 条内联规则，`config.yaml` 会从约 6KB 涨到约 200KB；也违背 #2 去掉内联规则的初衷。
   - 否决的备选：运行时把订阅规则按策略拆成多个 rule-set。实现复杂，mihomo 没有订阅更新后的回调可用。
-  - 订阅里的规则与 base 的 GEOSITE 分类大体重合（按分类名对比，未逐条核对）；缺少的个别规则用前置规则补。
+  - 订阅里的规则与 geosite 分类大体重合（按分类名对比，未逐条核对）；缺少的个别规则用前置规则补。
 - **不做规则集（rule-providers）**：按服务分流用前置规则 `GEOSITE,<分类>,<策略>`，geo 数据之外的个别需求用 `DOMAIN-SUFFIX`、`PROCESS-NAME` 等自定义规则补。
   - 随包 geosite 有 1552 个分类（含 `openai`、`anthropic`、`github`、`tiktok`、`category-ai-!cn` 等），geoip 有 260 个；`geo-auto-update` 每 24 小时更新，与规则集通常的更新间隔相同。[已验证 via 解析 meta-rules-dat latest 的 `GeoSite.dat` / `GeoIP.dat`，2026-10-05]
   - 规则集的 `behavior`、`format` 由文件内容决定，填错时 mihomo 不报错：格式错则规则数为 0，classical 文件当成 `domain` 会把 `DOMAIN-SUFFIX,…` 整行当作域名、永不匹配；`mihomo -t` 不下载规则集，也发现不了。最常用的 Loyalsoldier/clash-rules 的 `.txt` 内容是 YAML，无法按扩展名推断。[已验证 via 本地 mihomo v1.19.32 载入 Loyalsoldier/clash-rules、blackmatrix7/ios_rule_script 的文件]
   - 覆盖不到：大规模去广告（geosite `category-ads-all` 只有 911 条），base 本就不做。出现 geosite 分类与自定义规则都解决不了的常见需求时再评估。
+- **默认模板不按服务分组**：`base.yaml` 只有 `Proxy`、地区组（HK、JP、SG、TW、US）和 `Final`，规则只分 private、FCM 直连、`geolocation-!cn` 走 `Proxy`、`cn` 直连。v0.3 之前的 14 个服务组（YouTube、Netflix 等）大多数用户用不到，哪些服务值得单独分组也因人而异；按服务分流由用户用 `append-proxy-groups` 加组、`prepend-rules` 加规则，写法见 `override.md`"示例：按服务分流"。
+  - 不提供 `url-test` 的 `Auto` 组：按延迟自动切换会让出口节点跳动；需要时用户自己追加。
+  - `Proxy` 是手动选节点的组：只用 `include-all` 列出所有节点，不包含地区组。没有记住的选择时默认选第一个节点；一个节点都没有时组里只有 mihomo 的 `empty-fallback` 占位 `COMPATIBLE`，它本身就是直连，效果等于 DIRECT。[已验证 via MetaCubeX/mihomo v1.19.34 `adapter/outboundgroup/parser.go`、`groupbase.go` `GetProxies`、`selector.go` `selectedProxy`，`adapter/outbound/direct.go` `NewCompatible`]
+  - 否决：`Proxy` 列出地区组并默认选第一个地区（v0.3 开发中一度采用 `HK`）。订阅里没有该地区的节点时，默认出口就是空组的占位，用户得自己去面板改。
+  - 否决的备选：base 保留少量常用服务组。用户想加或换组时仍要整体覆盖 `proxy-groups`，问题没有解决。
