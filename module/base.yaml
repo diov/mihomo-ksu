@@ -1,6 +1,6 @@
 # Module-maintained template. Do not edit on device: put changes in
 # /data/adb/mihomo-ksu/override.yaml via the module WebUI (docs/override.md).
-# The controller secret is passed on the command line, never written here.
+# The controller secret is passed in through the environment, never written here.
 
 mode: rule
 ipv6: false
