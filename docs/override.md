@@ -18,9 +18,9 @@ override 是一个 mihomo 配置片段，只写与 base 不同的部分。
 
 按顺序执行：
 
-1. **深度合并**：除特殊键（`prepend-rules`、`append-rules`）外，override 的每个键按下面的规则合并到 base 上。`x-provider-defaults` 同样参与这一步，也就是说 override 可以修改订阅默认字段。
+1. **深度合并**：除特殊键（`prepend-rules`、`append-rules`、`append-proxy-groups`）外，override 的每个键按下面的规则合并到 base 上。`x-provider-defaults` 同样参与这一步，也就是说 override 可以修改订阅默认字段。
 2. **订阅补齐**：用第 1 步得到的 `x-provider-defaults`，补齐 `proxy-providers` 中每个条目缺失的字段。
-3. **规则插入**：在第 1 步得到的 `rules` 上处理 `prepend-rules` / `append-rules`，然后从结果中删除这两个键。
+3. **数组插入**：在第 1 步得到的 `rules` 上处理 `prepend-rules` / `append-rules`，在 `proxy-groups` 上处理 `append-proxy-groups`，然后从结果中删除这三个键。
 4. **Tun 排除**：`tun.exclude-package` 与 `tun.exclude-uid` 各自取 base 与 override 的并集。
 
 ### 1. 深度合并
@@ -32,9 +32,9 @@ override 是一个 mihomo 配置片段，只写与 base 不同的部分。
 | 不存在 | 任意 | 取 override |
 | 任意 | 不存在 | 保留 base |
 
-- 数组一律整体替换，包括 `rules`、`proxy-groups`、`tun.dns-hijack`、`dns.fake-ip-filter` 等。要在 base 的数组上增减条目，只能写出完整的新数组。例外只有规则（第 3 步）和 `tun.exclude-package`、`tun.exclude-uid`（第 4 步）。
+- 数组一律整体替换，包括 `rules`、`proxy-groups`、`tun.dns-hijack`、`dns.fake-ip-filter` 等。要在 base 的数组上增减条目，只能写出完整的新数组。例外只有规则、代理组的插入（第 3 步）和 `tun.exclude-package`、`tun.exclude-uid`（第 4 步）。
 - `null` 不做特殊处理，按标量替换；mihomo 把它当作未设置。
-- base 的代理组使用 `include-all`，新增的订阅会自动进入这些组，通常不需要改 `proxy-groups`。
+- base 的代理组使用 `include-all`，新增的订阅会自动进入这些组。要按服务分流，用 `append-proxy-groups` 加组、`prepend-rules` 加规则（见"示例：按服务分流"），不要整体覆盖 `proxy-groups`。
 
 ### 2. 订阅补齐
 
@@ -48,12 +48,20 @@ override 是一个 mihomo 配置片段，只写与 base 不同的部分。
 
 通常每条订阅只需要写 `url`。从文件导入的订阅写 `type: file`（不写 `url`、`interval`），补齐规则相同；文件内容由 WebUI 在保存时写到生成的 `path`。
 
-### 3. 规则插入
+### 3. 数组插入
+
+三个键都基于第 1 步的结果：如果 override 同时写了 `rules` 或 `proxy-groups`（整体替换），先替换，再插入。三个键都必须是数组，否则报错；为空数组时不做任何事。
+
+规则：
 
 - `prepend-rules`：插入到 `rules` 的最前面，保持自身顺序。
 - `append-rules`：插入到最后一条 `MATCH` 规则之前；`rules` 中没有 `MATCH` 时追加到末尾。
-- 两者都基于第 1 步的结果：如果 override 同时写了 `rules`（整体替换），先替换，再插入。
-- 两个键都必须是数组，否则报错。
+
+代理组：
+
+- `append-proxy-groups`：追加到 `proxy-groups` 的末尾，保持自身顺序。`proxy-groups` 不存在或为 `null` 时，结果就是追加的列表；是其他非数组值时报错。
+- 追加的组是完整条目，不继承 base 的任何字段（锚点不能跨文件引用）。
+- 合并不检查组条目的内容：字段是否齐全、组名是否与已有的组重复、`proxies` 引用的组或节点是否存在，都由保存时的 `mihomo -t` 校验（重名的组 mihomo 会报错）。
 
 ### 4. Tun 排除
 
@@ -110,3 +118,22 @@ dns:
 - `proxy-providers.airport` = `x-provider-defaults` 的全部字段 + `url` + `path: ./providers/airport.yaml`；`backup` 的 `interval` 为 3600，其余同理。
 - `rules` = `DOMAIN-SUFFIX,example.com,DIRECT`、base 的规则（不含 `MATCH`）、`DOMAIN-SUFFIX,windowsupdate.com,DIRECT`、`MATCH,Final`。
 - `dns.nameserver` 整体替换为一项；`dns` 的其他字段保留 base 的值。
+
+## 示例：按服务分流
+
+要让某些服务单独选节点，追加组并在前面插入规则：
+
+```yaml
+append-proxy-groups:
+  - { name: Google, type: select, proxies: [Proxy, HK, JP, SG, TW, US, DIRECT] }
+  - { name: AI, type: select, proxies: [Proxy, HK, JP, SG, TW, US, DIRECT] }
+
+prepend-rules:
+  - GEOSITE,googlefcm,DIRECT
+  - GEOSITE,google,Google
+  - GEOIP,google,Google,no-resolve
+  - GEOSITE,category-ai-!cn,AI
+```
+
+- 服务规则一般写在 `prepend-rules`：`append-rules` 插在 `MATCH` 之前、`GEOSITE,geolocation-!cn,Proxy` 等规则之后，被这些规则先命中的流量到不了它。
+- mihomo 自上而下匹配，第一条命中的规则生效，分类有重叠时靠前的规则优先。`google` 包含 `googlefcm`，要让 FCM 推送直连，`GEOSITE,googlefcm,DIRECT` 要写在 `GEOSITE,google,…` 之前；base 里的同一条规则排在所有 `prepend-rules` 之后，挡不住前置的 Google 规则。同理，`category-ai-!cn` 包含 Gemini，上面的写法下 Gemini 走 Google 组；把 AI 规则移到 Google 之前，Gemini 就走 AI 组。
